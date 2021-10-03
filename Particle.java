@@ -1,8 +1,10 @@
 package Particle;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import org.apache.commons.lang3.SerializationUtils;
 
-public class Particle {
+public class Particle implements Cloneable,Serializable{
     private int pointNum, portN;
     private double[] x;
     private double[] y;
@@ -10,37 +12,85 @@ public class Particle {
     private String name;
     public CenterPoint centerPoint=new CenterPoint(getCenterX(),getCenterY());
     ArrayList<Ports> portsArrayList=new ArrayList<Ports>();
-    private double sumF;
+    private double sumF=0;
+
+//    @Override
+//    public Particle clone() throws CloneNotSupportedException {
+//        Particle p=new Particle();
+//        p.name=this.name;
+//        p.pointNum=this.pointNum;
+//        p.x=this.x;
+//        p.y=this.y;
+//        p.maxX=this.maxX;p.maxY=this.maxY;p.minX=this.minX;p.minY=this.minY;
+//        if(this.portsArrayList!=null) p.portsArrayList=new ArrayList<Ports>(this.portsArrayList);
+//        p.sumF=this.sumF;
+//        p.centerPoint=this.centerPoint.clone();
+//        return p;
+//    }
+
+    public Particle() {
+    }
 
     public void setSumF(double sumF) {
         this.sumF = sumF;
     }
 
-//    public double getSumF(int x){
-//        return  this.sumF;
-//    }
+    public double getSumF(int x){
+        return  this.sumF;
+    }
 
     public double getSumF(){
         double sum=0;
-        for(int i=0;i<portsArrayList.size();i++){
-            sum+=portsArrayList.get(i).sumDis;
+        for (Ports ports : portsArrayList) {
+            sum += ports.sumDis;
         }
         return sum;
     }
 
     public void Move(double x,double y){
+        double centreX=0,centreY=0;
         for(int i=0;i<pointNum;i++){
             this.x[i]+=x;
             this.y[i]+=y;
-            maxX+=x;
-            minX+=x;
-            maxY+=y;
-            minY+=y;
+
+            centreX+=this.x[i];
+            centreY+=this.y[i];
         }
-        for(int i=0;i<portsArrayList.size();i++){
-            portsArrayList.get(i).Move(x,y);
+        maxX+=x;
+        minX+=x;
+        maxY+=y;
+        minY+=y;
+
+        this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        for (Ports ports : portsArrayList) {
+            ports.Move(x, y);
         }
     }
+
+    public void Move2(double x,double y){
+        double absX=x-this.getCenterX(),absY=y-this.getCenterY();
+        double centreX=0,centreY=0;
+        for(int i=0;i<pointNum;i++){
+            this.x[i]+=absX;
+            this.y[i]+=absY;
+
+            centreX+=this.x[i];
+            centreY+=this.y[i];
+        }
+        maxX+=absX;
+        minX+=absX;
+        maxY+=absY;
+        minY+=absY;
+
+        this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        for (Ports ports : portsArrayList) {
+            ports.Move(absX, absY);
+        }
+    }
+
+//    public Particle(Particle p){
+//        this(p.pointNum,p.portN,p.x,p.y,p.name,p.centerPoint,p.portsArrayList);
+//    }
 
     public Particle(int pointNum, int portN, double[] x, double[] y, String name, CenterPoint centerPoint, ArrayList<Ports> portsArrayList) {
         this.pointNum = pointNum;
@@ -59,6 +109,12 @@ public class Particle {
         this.y = y;
         this.name = name;
         this.pointNum = pointNum;
+        double centreX=0,centreY=0;
+        for(int i=0;i<pointNum;i++){
+            centreX+=x[i];
+            centreY+=y[i];
+        }
+        this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
         Resetboundary();
     }
 
@@ -76,13 +132,13 @@ public class Particle {
         double sum=0;
         for(int i = 0; i< pointNum; i++)
             sum+=x[i];
-        return sum;
+        return sum/pointNum;
     }
     public double getCenterY(){
         double sum=0;
         for(int i = 0; i< pointNum; i++)
             sum+=y[i];
-        return sum;
+        return sum/pointNum;
     }
 
     public double getMaxX() {
@@ -123,8 +179,13 @@ public class Particle {
 
 
 }
-class CenterPoint {
+class CenterPoint implements Cloneable, Serializable {
     double x,y;
+
+    @Override
+    public CenterPoint clone() throws CloneNotSupportedException {
+        return (CenterPoint) super.clone();
+    }
 
     public CenterPoint(double x, double y) {
         this.x = x;

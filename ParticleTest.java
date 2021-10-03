@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.SerializationUtils;
 
 public class ParticleTest {
     private static MyPoint[] AreaBoundary=new MyPoint[4];  //顺时针为正方向
@@ -14,59 +15,117 @@ public class ParticleTest {
     public static MyPoint[] v=new MyPoint[ModuleNum];
     public static Particle[] pBest=new Particle[ModuleNum];   //个体最优
     public static Particle[] allBest=new Particle[ModuleNum];   //全局最优
-    public static double allBestF=0;
-    public static double allSumUp=0,bestSumOverlap=0;
+    public static double bestF =0,allOverlap=0; //最佳总值,总overlap
+    public static double allSumUp=0,bestSumOverlap=0;//总距离，总最佳overlap
     public static Random random=new Random();
 //    public static double rand=random.nextDouble()*10;
-    public static int c1=3,c2=3;
+    public static double c1=3,c2=1.2;
     public static ArrayList<ArrayList<Ports>> LinkSET=new ArrayList<>();
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CloneNotSupportedException {
         ReadAndInit();
         ReadConnectFile();
         Init();
-        PSO(20);
+        PSO(2000);
     }
 
-    public static void PSO(int max){
+    public static void PSO(int max) throws CloneNotSupportedException {
         for(int i=0;i<max;i++){
             double w=0.3;
             for(int j=0;j<ModuleNum;j++){
-                double vx=w*v[j].x+c1*random.nextDouble()*(pBest[j].getCenterX()-p[j].getCenterX())+c2*random.nextDouble()*(allBest[j].getCenterX()-p[j].getCenterX());
-                double vy=w*v[j].y+c1*random.nextDouble()*(pBest[j].getCenterY()-p[j].getCenterY())+c2*random.nextDouble()*(allBest[j].getCenterX()-p[j].getCenterY());
+                //速度更新 注意界限
+                double vx=w*v[j].x+c1*random.nextDouble()*10*(pBest[j].getCenterX()-p[j].getCenterX())+c2*random.nextDouble()*10*(allBest[j].getCenterX()-p[j].getCenterX());
+                double vy=w*v[j].y+c1*random.nextDouble()*10*(pBest[j].getCenterY()-p[j].getCenterY())+c2*random.nextDouble()*10*(allBest[j].getCenterY()-p[j].getCenterY());
+                if(random.nextDouble()>=0.5)
+                    vx *= random.nextDouble()*100;
+                else
+                    vx*=-100*random.nextDouble();
+                if(random.nextDouble()>=0.5)
+                    vy *= 100*random.nextDouble();
+                else
+                    vy*=-100*random.nextDouble();
+
+                //出界限制
+                if(vx>AreaBoundary[2].getX()) vx=AreaBoundary[2].getX();
+                else if(vx<AreaBoundary[0].getX()) vx=AreaBoundary[0].getX();
+                if(vy>AreaBoundary[2].getY()) vy=AreaBoundary[2].getY();
+                else if(vx<AreaBoundary[0].getY()) vy=AreaBoundary[0].getY();
+
                 v[j]=new MyPoint(vx,vy);
 
                 p[j].Move(vx,vy);
-            }
-            fitnessFunction();
-            double tempSum=0;
-            for(int j=0;j<ModuleNum;j++){
-                if(p[j].getSumF()<pBest[j].getSumF()) pBest[j]=p[j];
-                tempSum+=p[j].getSumF();
+
+                boolean moveAble1=false,moveAble2=false;
+                if(p[j].getMaxX()>AreaBoundary[2].getX()) {
+                    vx = AreaBoundary[2].getX();
+                    moveAble1 = true;
+                }
+                else if(p[j].getMinX()<AreaBoundary[0].getX()) {
+                    vx = AreaBoundary[0].getX();
+                    moveAble1 = true;
+                }
+                if(p[j].getMaxY()>AreaBoundary[2].getY()) {
+                    vy = AreaBoundary[2].getY();
+                    moveAble2=true;
+                }
+                else if(p[j].getMinY()<AreaBoundary[0].getY()) {
+                    vy = AreaBoundary[0].getY();
+                    moveAble2=true;
+                }
+                if(moveAble1&&moveAble2) p[j].Move2(vx,vy);
+                else if(moveAble1) p[j].Move2(vx,p[j].getCenterY());
+                else if(moveAble2) p[j].Move2(p[j].getCenterX(),vy);
             }
 
-            double tempOverlap=0;
-            for(int k=0;k<ModuleNum;k++)
-                for(int j=0;j<ModuleNum;j++){
-                    if(j==k) continue;
-                    else{
-                        tempOverlap+=calOverlap(p[k],p[j]);
+
+            for (ArrayList<Ports> ports : LinkSET) {
+                for (int j = 0; j < ports.size(); j++) {
+                    ports.get(j).setSumDis(0);
+                    for (int k = 0; k < ports.size(); k++) {
+                        if (k == j) continue;
+                        ports.get(j).sumDis += getDist(ports.get(j).getCenterPoint(), ports.get(k).getCenterPoint());
                     }
                 }
+            }
 
-            if(allBestF>tempSum+tempOverlap) allBestF=tempSum+tempOverlap;
-            System.out.println("==="+i+"==="+allBestF);
+            fitnessFunction();
+            double tempSum=0;
+            for(int j=0;j<ModuleNum;j++){  //更新个体最优
+                if(p[j].getSumF()<pBest[j].getSumF()) { ///浅拷贝问题！！！！！！！！！！
+                    pBest[j] = (Particle) SerializationUtils.clone(p[j]);
+                    System.out.println("Changed:"+j);
+                }
+                tempSum+=p[j].getSumF(1);
+            }
+
+//            double tempOverlap=0;
+//            for(int k=0;k<ModuleNum;k++)
+//                for(int j=0;j<ModuleNum;j++){
+//                    if(j==k) continue;
+//                    else{
+//                        tempOverlap+=calOverlap(p[k],p[j]);
+//                    }
+//                }
+
+            if(bestF >tempSum/*+tempOverlap*/) {
+                bestF = tempSum/*+tempOverlap*/;
+                for(int j=0;j<ModuleNum;j++)
+                    allBest[j]=(Particle) SerializationUtils.clone(p[j]);
+            }
+            System.out.println("==="+i+"==="+ bestF);
+        }
+        for(int i=0;i<ModuleNum;i++){
+            System.out.println(p[i].getCenterX()+"==="+p[i].getCenterY());
         }
     }
 
-    public static void Init(){
+    public static void Init() throws CloneNotSupportedException {
         for(int i=0;i<ModuleNum;i++){
             v[i]=new MyPoint(random.nextDouble()*10,random.nextDouble()*10);
         }
         for (ArrayList<Ports> ports : LinkSET) {
             for (int j = 0; j < ports.size(); j++) {
                 for (int k = 0; k < ports.size(); k++) {
-                    if (k == j) k++;
-                    if(k>=ports.size()) break;
+                    if (k == j) continue;
                     ports.get(j).sumDis += getDist(ports.get(j).getCenterPoint(), ports.get(k).getCenterPoint());
                 }
             }
@@ -75,18 +134,16 @@ public class ParticleTest {
         for(int i=0;i<ModuleNum;i++)
             for(int j=0;j<ModuleNum;j++){
                 if(j==i) continue;
-                else{
-                    bestSumOverlap+=calOverlap(p[i],p[j]);
-                }
+                bestSumOverlap+=calOverlap(p[i],p[j]);
             }
 //        System.arraycopy(p, 0, pBest, 0, ModuleNum);
 //        System.arraycopy(p, 0, allBest, 0, ModuleNum);
         for(int i=0;i<ModuleNum;i++)  //↑
         {
-            pBest[i]=p[i];
-            allBest[i]=p[i];
+            pBest[i]=(Particle) SerializationUtils.clone(p[i]);
+            allBest[i]=(Particle) SerializationUtils.clone(p[i]);
         }
-        allBestF=allSumUp+bestSumOverlap;
+        bestF =allSumUp+bestSumOverlap;
     }
 
     public static void fitnessFunction(){
@@ -97,11 +154,10 @@ public class ParticleTest {
             p[i].setSumF(x);
             allSumUp+=x;
         }
-
     }
 
     public static double getDist(CenterPoint p1, CenterPoint p2){
-        return Math.sqrt(Math.hypot(p1.getX()-p2.getX(),p1.getY()-p2.getY()));
+        return Math.hypot(p1.getX()-p2.getX(),p1.getY()-p2.getY());
     }
 
     public static double calOverlap(Particle p1,Particle p2){
