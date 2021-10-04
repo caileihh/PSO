@@ -1,11 +1,18 @@
 package Particle;
 
-public class MyPoint {
-    public double x,y;
+import java.io.Serializable;
+
+public class MyPoint implements Serializable {
+    public double x=0,y=0;
 
     public MyPoint(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+
+    public MyPoint() {
+        this.x=0;
+        this.y=0;
     }
 
     public double getX() {

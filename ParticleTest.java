@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.SerializationUtils;
@@ -15,26 +16,50 @@ public class ParticleTest {
     public static MyPoint[] v=new MyPoint[ModuleNum];
     public static Particle[] pBest=new Particle[ModuleNum];   //个体最优
     public static Particle[] allBest=new Particle[ModuleNum];   //全局最优
-    public static double bestF =0,allOverlap=0; //最佳总值,总overlap
+    public static double bestF =0,allOverlap=0,eps=1e-6; //最佳总值,总overlap
     public static double allSumUp=0,bestSumOverlap=0;//总距离，总最佳overlap
     public static Random random=new Random();
 //    public static double rand=random.nextDouble()*10;
     public static double c1=3,c2=1.2;
     public static ArrayList<ArrayList<Ports>> LinkSET=new ArrayList<>();
+
+    public static MyPoint[] p1=new MyPoint[6],p2=new MyPoint[4];
+
     public static void main(String[] args) throws CloneNotSupportedException {
         ReadAndInit();
         ReadConnectFile();
         Init();
-        PSO(2000);
+        PSO(200);
+//        TestMyself();
     }
 
-    public static void PSO(int max) throws CloneNotSupportedException {
+    public static void TestMyself(){
+        Scanner sc=new Scanner(System.in);
+        int n1=6,n2=4;
+//        p1=new MyPoint[n1];p2=new MyPoint[n2];
+        for(int i=0;i<6;i++) p1[i]=new MyPoint();
+        for(int i=0;i<4;i++) p2[i]=new MyPoint();
+        System.out.println(p1[1]);
+        for(int i=0;i<n1;i++){
+            p1[i].x=sc.nextDouble();
+            p1[i].y=sc.nextDouble();
+        }
+        for(int i=0;i<n2;i++){
+            p2[i].x=sc.nextDouble();
+            p2[i].y=sc.nextDouble();
+        }
+        double Area=SPIA(p1, p2, n1, n2);
+        System.out.println(Area);
+    }
+
+    public static void PSO(int max) {
         for(int i=0;i<max;i++){
             double w=0.3;
             for(int j=0;j<ModuleNum;j++){
                 //速度更新 注意界限
-                double vx=w*v[j].x+c1*random.nextDouble()*10*(pBest[j].getCenterX()-p[j].getCenterX())+c2*random.nextDouble()*10*(allBest[j].getCenterX()-p[j].getCenterX());
-                double vy=w*v[j].y+c1*random.nextDouble()*10*(pBest[j].getCenterY()-p[j].getCenterY())+c2*random.nextDouble()*10*(allBest[j].getCenterY()-p[j].getCenterY());
+//                double vx=w*v[j].x+c1*random.nextDouble()*10*(pBest[j].getCenterX()-p[j].getCenterX())+c2*random.nextDouble()*10*(allBest[j].getCenterX()-p[j].getCenterX());
+//                double vy=w*v[j].y+c1*random.nextDouble()*10*(pBest[j].getCenterY()-p[j].getCenterY())+c2*random.nextDouble()*10*(allBest[j].getCenterY()-p[j].getCenterY());
+                double vx=random.nextDouble(),vy=random.nextDouble();
                 if(random.nextDouble()>=0.5)
                     vx *= random.nextDouble()*100;
                 else
@@ -43,6 +68,8 @@ public class ParticleTest {
                     vy *= 100*random.nextDouble();
                 else
                     vy*=-100*random.nextDouble();
+
+                vx/=10;vy/=10;
 
                 //出界限制
                 if(vx>AreaBoundary[2].getX()) vx=AreaBoundary[2].getX();
@@ -97,24 +124,24 @@ public class ParticleTest {
                 tempSum+=p[j].getSumF(1);
             }
 
-//            double tempOverlap=0;
-//            for(int k=0;k<ModuleNum;k++)
-//                for(int j=0;j<ModuleNum;j++){
-//                    if(j==k) continue;
-//                    else{
-//                        tempOverlap+=calOverlap(p[k],p[j]);
-//                    }
-//                }
+            double tempOverlap=0;
+            for(int k=0;k<ModuleNum;k++)
+                for(int j=0;j<ModuleNum;j++){
+                    if(j==k) continue;
+                    else{
+                        tempOverlap+=(calOverlap(p[k],p[j]));
+                    }
+                }
 
-            if(bestF >tempSum/*+tempOverlap*/) {
-                bestF = tempSum/*+tempOverlap*/;
+            if(bestF >tempSum+tempOverlap) {
+                bestF = tempSum+tempOverlap;
                 for(int j=0;j<ModuleNum;j++)
                     allBest[j]=(Particle) SerializationUtils.clone(p[j]);
             }
             System.out.println("==="+i+"==="+ bestF);
         }
         for(int i=0;i<ModuleNum;i++){
-            System.out.println(p[i].getCenterX()+"==="+p[i].getCenterY());
+            System.out.println(i+":"+p[i].getMaxY()+"==="+p[i].getMaxY());
         }
     }
 
@@ -161,14 +188,18 @@ public class ParticleTest {
     }
 
     public static double calOverlap(Particle p1,Particle p2){
-        if(p1.getMaxX()<p2.getMinX()||p1.getMinX()>p2.getMaxX()||
-                p1.getMaxY()<p2.getMinY()||p1.getMinY()>p2.getMaxY()) return 0;
-        if(p1.getMaxX()<p2.getMaxX()&&p1.getMaxY()<p2.getMaxY()) return 10000;
-        if(p1.getMinX()>p2.getMinY()&&p1.getMinY()>p2.getMinY()) return 10000;
-        return 0;
+//        if(p1.getMaxX()<p2.getMinX()||p1.getMinX()>p2.getMaxX()||
+//                p1.getMaxY()<p2.getMinY()||p1.getMinY()>p2.getMaxY()) return 0;
+//        if(p1.getMaxX()<=p2.getMaxX()&&p1.getMaxY()<=p2.getMaxY()) return 10000;
+//        if(p1.getMinX()>=p2.getMinY()&&p1.getMinY()>=p2.getMinY()) return 10000;
+//        return 0;
+        MyPoint[] myPoint1=new MyPoint[p1.getPointNum()],myPoint2=new MyPoint[p2.getPointNum()];
+        for(int i=0;i<p1.getPointNum();i++) myPoint1[i]=new MyPoint(p1.getX(i),p1.getY(i));
+        for(int i=0;i<p2.getPointNum();i++) myPoint2[i]=new MyPoint(p2.getX(i),p2.getY(i));
+        return SPIA(myPoint1,myPoint2,p1.getPointNum(),p2.getPointNum());
     }
 
-    private static Pattern pattern = Pattern.compile("-?[0-9]+(.[0-9]+)?");
+    private static final Pattern pattern = Pattern.compile("-?[0-9]+(.[0-9]+)?");
     private static boolean isNumber(String str) {
         // 通过Matcher进行字符串匹配
         Matcher m = pattern.matcher(str);
@@ -275,5 +306,116 @@ public class ParticleTest {
         }
         return list;
     }
+
+    public static int dcmp(double x){
+        if(x>eps) return 1;
+        return x<-eps? -1:0;
+    }
+    public static double cross(MyPoint a,MyPoint b,MyPoint c){
+        return (a.x - c.x) * (b.y - c.y) - (b.x - c.x) * (a.y - c.y);
+    }
+    public static MyPoint intersection(MyPoint a,MyPoint b,MyPoint c,MyPoint d){
+        MyPoint p=(MyPoint) SerializationUtils.clone(a);
+        double t = ((a.x - c.x) * (c.y - d.y) - (a.y - c.y) * (c.x - d.x)) / ((a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x));
+        p.x += (b.x - a.x) * t;
+        p.y += (b.y - a.y) * t;
+        return p;
+    }
+    public static double PolygonArea(MyPoint[] p, int n){
+        if (n < 3) return 0.0;
+        double s = p[0].y * (p[n - 1].x - p[1].x);
+        for (int i = 1; i < n - 1; ++i) {
+            s += p[i].y * (p[i - 1].x - p[i + 1].x);
+        }
+        s += p[n - 1].y * (p[n - 2].x - p[0].x);
+        return Math.abs(s * 0.5);
+    }
+    public static double CPIA(MyPoint[] a,MyPoint[] b,int na,int nb){
+        MyPoint []p=new MyPoint[20]; MyPoint []tmp=new MyPoint[20];
+        int tn, sflag, eflag;
+
+        p=(MyPoint[]) SerializationUtils.clone(b);           /////////
+
+        for (int i = 0; i < na && nb > 2; i++)
+        {
+            if (i == na - 1) {
+                sflag = dcmp(cross(a[0], p[0], a[i]));
+            }
+            else {
+                sflag = dcmp(cross(a[i + 1], p[0], a[i]));
+            }
+            for (int j = tn = 0; j < nb; j++, sflag = eflag)
+            {
+                if (sflag >= 0) {
+                    tmp[tn++] = (MyPoint) SerializationUtils.clone(p[j]);
+                }
+                if (i == na - 1) {
+                    if (j == nb - 1) {
+                        eflag = dcmp(cross(a[0], p[0], a[i]));
+                    }
+                    else {
+                        eflag = dcmp(cross(a[0], p[j + 1], a[i])); //计算下一个连续点在矢量线段的位置
+                    }
+                }
+                else {
+                    if (j == nb - 1) {
+                        eflag = dcmp(cross(a[i + 1], p[0], a[i]));
+                    }
+                    else {
+                        eflag = dcmp(cross(a[i + 1], p[j + 1], a[i]));
+                    }
+                }
+                if ((sflag ^ eflag) == -2) {  //1和-1的异或为-2，也就是两个点分别在矢量线段的两侧
+                    if (i == na - 1) {
+                        if (j == nb - 1) {
+                            tmp[tn++] = (MyPoint) SerializationUtils.clone(intersection(a[i], a[0], p[j], p[0])); //求交点
+                        }
+                        else {
+                            tmp[tn++] = (MyPoint) SerializationUtils.clone(intersection(a[i], a[0], p[j], p[j + 1]));
+                        }
+                    }
+                    else {
+                        if (j == nb - 1) {
+                            tmp[tn++] = (MyPoint) SerializationUtils.clone(intersection(a[i], a[i + 1], p[j], p[0]));
+                        }
+                        else {
+                            tmp[tn++] = (MyPoint) SerializationUtils.clone(intersection(a[i], a[i + 1], p[j], p[j + 1]));
+                        }
+                    }
+                }
+            }
+            p=(MyPoint[]) SerializationUtils.clone(tmp);       //////SerializationUtils.clone
+            nb = tn;p[nb] = p[0];
+        }
+        if (nb < 3) return 0.0;
+        return PolygonArea(p, nb);
+    }
+    public static double SPIA(MyPoint a[], MyPoint b[], int na, int nb){
+        int i, j;
+        MyPoint []t1=new MyPoint[na],t2=new MyPoint[nb];
+        double res = 0, num1, num2;
+        t1[0] = (MyPoint) SerializationUtils.clone(a[0]); t2[0] = (MyPoint) SerializationUtils.clone(b[0]);
+        for(i = 2; i < na; i++)
+        {
+            t1[1] = (MyPoint) SerializationUtils.clone(a[i-1]); t1[2] = (MyPoint) SerializationUtils.clone(a[i]);
+            num1 = dcmp(cross(t1[1], t1[2],t1[0]));  //根据差积公式来计算t1[2]在矢量线段（t1[0], t1[1]）的左侧还是右侧，
+            //值为负数在矢量线段左侧，值为正数在矢量线段右侧
+            if(num1 < 0) swap(t1[1], t1[2]);  // 按逆时针进行排序
+            for(j = 2; j < nb; j++)
+            {
+                t2[1] = (MyPoint) SerializationUtils.clone(b[j - 1]); t2[2] = (MyPoint) SerializationUtils.clone(b[j]);
+                num2 = dcmp(cross(t2[1], t2[2],t2[0]));
+                if(num2 < 0) swap(t2[1], t2[2]);
+                res += CPIA(t1, t2, 3, 3) * num1 * num2;
+            }
+        }
+        return res;
+    }
+    public static void swap(MyPoint p1,MyPoint p2){   ///?
+        MyPoint temp=new MyPoint(p1.getX(),p1.getY());
+        p1.setX(p2.getX());p1.setY(p2.getY());
+        p2.setX(temp.getX());p2.setY(temp.getY());
+    }
+
 }
 
