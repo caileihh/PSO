@@ -1,5 +1,6 @@
 package Particle;
 
+import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,14 +10,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.SerializationUtils;
 
+import javax.swing.*;
+
 public class ParticleTest {
-    private static MyPoint[] AreaBoundary=new MyPoint[4];  //顺时针为正方向
-    private static final int ModuleNum=16;
+    public static MyPoint[] AreaBoundary=new MyPoint[4];  //顺时针为正方向
+    public static final int ModuleNum=16;
+    public static final String  fileNumber="16-12529";
     public static Particle[] p=new Particle[ModuleNum];
     public static MyPoint[] v=new MyPoint[ModuleNum];
     public static Particle[] pBest=new Particle[ModuleNum];   //个体最优
     public static Particle[] allBest=new Particle[ModuleNum];   //全局最优
-    public static double bestF =0,allOverlap=0,eps=1e-6; //最佳总值,总overlap
+    public static double bestF =0,bestOverlap=0,eps=1e-6; //最佳总值,总overlap
     public static double allSumUp=0,bestSumOverlap=0;//总距离，总最佳overlap
     public static Random random=new Random();
 //    public static double rand=random.nextDouble()*10;
@@ -29,28 +33,30 @@ public class ParticleTest {
         ReadAndInit();
         ReadConnectFile();
         Init();
-        PSO(200);
+//        PSO(200);
+        Draw();
 //        TestMyself();
     }
 
-    public static void TestMyself(){
-        Scanner sc=new Scanner(System.in);
-        int n1=6,n2=4;
-//        p1=new MyPoint[n1];p2=new MyPoint[n2];
-        for(int i=0;i<6;i++) p1[i]=new MyPoint();
-        for(int i=0;i<4;i++) p2[i]=new MyPoint();
-        System.out.println(p1[1]);
-        for(int i=0;i<n1;i++){
-            p1[i].x=sc.nextDouble();
-            p1[i].y=sc.nextDouble();
+    private static int getRandomNumberInRange(int min, int max) { //含min和max
+
+        if (min >= max) {
+            throw new IllegalArgumentException("max must be greater than min");
         }
-        for(int i=0;i<n2;i++){
-            p2[i].x=sc.nextDouble();
-            p2[i].y=sc.nextDouble();
-        }
-        double Area=SPIA(p1, p2, n1, n2);
-        System.out.println(Area);
+
+        Random r = new Random();
+        return r.nextInt((max - min) + 1) + min;
     }
+
+    public static void TestMyself(){
+        for(int i=0;i<ModuleNum;i++){
+            allBest[i].adjustAngle(6);
+        }
+    }
+
+//    public static void qLearning(int maxN){
+//        for(int i=0;i<ModuleNum;i++)
+//    }
 
     public static void PSO(int max) {
         for(int i=0;i<max;i++){
@@ -68,7 +74,6 @@ public class ParticleTest {
                     vy *= 100*random.nextDouble();
                 else
                     vy*=-100*random.nextDouble();
-
                 vx/=10;vy/=10;
 
                 //出界限制
@@ -76,8 +81,10 @@ public class ParticleTest {
                 else if(vx<AreaBoundary[0].getX()) vx=AreaBoundary[0].getX();
                 if(vy>AreaBoundary[2].getY()) vy=AreaBoundary[2].getY();
                 else if(vx<AreaBoundary[0].getY()) vy=AreaBoundary[0].getY();
-
                 v[j]=new MyPoint(vx,vy);
+
+//                v[j].angleFlag=getRandomNumberInRange(0,7);
+//                p[j].adjustAngle(v[j].angleFlag);
 
                 p[j].Move(vx,vy);
 
@@ -119,7 +126,7 @@ public class ParticleTest {
             for(int j=0;j<ModuleNum;j++){  //更新个体最优
                 if(p[j].getSumF()<pBest[j].getSumF()) { ///浅拷贝问题！！！！！！！！！！
                     pBest[j] = (Particle) SerializationUtils.clone(p[j]);
-                    System.out.println("Changed:"+j);
+//                    System.out.println("Changed:"+j);
                 }
                 tempSum+=p[j].getSumF(1);
             }
@@ -135,6 +142,7 @@ public class ParticleTest {
 
             if(bestF >tempSum+tempOverlap) {
                 bestF = tempSum+tempOverlap;
+                bestOverlap=tempOverlap;
                 for(int j=0;j<ModuleNum;j++)
                     allBest[j]=(Particle) SerializationUtils.clone(p[j]);
             }
@@ -143,6 +151,7 @@ public class ParticleTest {
         for(int i=0;i<ModuleNum;i++){
             System.out.println(i+":"+p[i].getMaxY()+"==="+p[i].getMaxY());
         }
+        System.out.println(bestOverlap);
     }
 
     public static void Init() throws CloneNotSupportedException {
@@ -196,7 +205,7 @@ public class ParticleTest {
         MyPoint[] myPoint1=new MyPoint[p1.getPointNum()],myPoint2=new MyPoint[p2.getPointNum()];
         for(int i=0;i<p1.getPointNum();i++) myPoint1[i]=new MyPoint(p1.getX(i),p1.getY(i));
         for(int i=0;i<p2.getPointNum();i++) myPoint2[i]=new MyPoint(p2.getX(i),p2.getY(i));
-        return SPIA(myPoint1,myPoint2,p1.getPointNum(),p2.getPointNum());
+        return Math.abs(SPIA(myPoint1,myPoint2,p1.getPointNum(),p2.getPointNum()));
     }
 
     private static final Pattern pattern = Pattern.compile("-?[0-9]+(.[0-9]+)?");
@@ -207,7 +216,7 @@ public class ParticleTest {
         return m.matches();
     }
     public static void ReadConnectFile(){
-        List<String> list=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\16-10001\\connect_1.txt");
+        List<String> list=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\connect_1.txt");
         for(int line=0;line<list.size();line++){
             String temp=list.get(line);
             System.out.println(temp);
@@ -227,7 +236,7 @@ public class ParticleTest {
     }
 
     public static void ReadAndInit(){
-        List<String> list=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\16-10001\\Module.txt");
+        List<String> list=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\Module.txt");
         for(int i=0;i<list.size();i++)
         {
             String temp=list.get(i);
@@ -415,6 +424,25 @@ public class ParticleTest {
         MyPoint temp=new MyPoint(p1.getX(),p1.getY());
         p1.setX(p2.getX());p1.setY(p2.getY());
         p2.setX(temp.getX());p2.setY(temp.getY());
+    }
+
+
+    private static void Draw(){
+        jpanelTest jpanelTest=new jpanelTest();
+        jpanelTest.setBackground(Color.BLACK);
+        jpanelTest.setBounds(0, 0, 1000, 1000);
+        jpanelTest.setPreferredSize(new Dimension(2000, 2000));
+        JFrame frame = new JFrame("PSO");
+        JScrollPane jScrollPane = new JScrollPane(jpanelTest);
+        jScrollPane.setBounds(100, 100, 350, 450);
+        jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        jScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        jScrollPane.getVerticalScrollBar().setUnitIncrement(20);
+        frame.getContentPane().add(jScrollPane);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(1500, 1500 + 20);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setVisible(true);
     }
 
 }

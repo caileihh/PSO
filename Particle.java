@@ -2,7 +2,6 @@ package Particle;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import org.apache.commons.lang3.SerializationUtils;
 
 public class Particle implements Cloneable,Serializable{
     private int pointNum, portN;
@@ -31,6 +30,26 @@ public class Particle implements Cloneable,Serializable{
     public Particle() {
     }
 
+    public double getX(int i){
+        while (i>=pointNum) i-=pointNum;
+        return x[i];
+    }
+    public double getY(int i){
+        while (i>=pointNum) i-=pointNum;
+        return y[i];
+    }
+    public double[] getX() {
+        return x;
+    }
+
+    public double[] getY() {
+        return y;
+    }
+
+    public int getPointNum() {
+        return pointNum;
+    }
+
     public void setSumF(double sumF) {
         this.sumF = sumF;
     }
@@ -45,6 +64,84 @@ public class Particle implements Cloneable,Serializable{
             sum += ports.sumDis;
         }
         return sum;
+    }
+
+    public void adjustAngle(int angleFlag){  //可优化   //逆时针为正方向
+        double x0=getCenterX(),y0=getCenterY();
+        double centreX=0,centreY=0;
+        if(angleFlag==1) {
+            for(int i=0;i<pointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=y0-y1+x0;
+                this.y[i]=x1-x0+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum); //中心应该不会变化
+        }
+        else if(angleFlag==2){
+            for(int i=0;i<pointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=x0-x1+x0;
+                this.y[i]=y0-y1+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        }
+        else if(angleFlag==3){
+            for(int i=0;i<pointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=y1-y0+x0;
+                this.y[i]=x0-x1+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        }
+        else if(angleFlag==4){
+            for(int i=0;i<pointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=x0-x1+x0;
+                this.y[i]=y1-y0+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        }
+        else if(angleFlag==5){
+            for(int i=0;i<pointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=x1-x0+x0;
+                this.y[i]=y0-y1+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        }
+        else if(angleFlag==6){
+            for(int i=0;i<pointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=y0-y1+x0;
+                this.y[i]=x0-x1+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        }
+        else if(angleFlag==7){
+            for(int i=0;i<pointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=y1-y0+x0;
+                this.y[i]=x1-x0+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
+        }
+        for (Ports ports : portsArrayList) {
+            ports.adjustAngle(this.centerPoint, angleFlag);
+        }
     }
 
     public void Move(double x,double y){
@@ -101,7 +198,7 @@ public class Particle implements Cloneable,Serializable{
         this.centerPoint = centerPoint;
         this.portsArrayList = portsArrayList;
 
-        Resetboundary();
+        resetBoundary();
     }
 
     public Particle(String name, int pointNum, double []x, double []y){
@@ -115,10 +212,10 @@ public class Particle implements Cloneable,Serializable{
             centreY+=y[i];
         }
         this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
-        Resetboundary();
+        resetBoundary();
     }
 
-    public void Resetboundary(){
+    public void resetBoundary(){
         maxX=minX=x[0];maxY=minY=y[0];
         for(int i=0;i<pointNum;i++){
             if(maxX<x[i]) maxX=x[i];
