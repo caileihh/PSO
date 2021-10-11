@@ -69,6 +69,7 @@ public class Particle implements Cloneable,Serializable{
     public void adjustAngle(int angleFlag){  //可优化   //逆时针为正方向
         double x0=getCenterX(),y0=getCenterY();
         double centreX=0,centreY=0;
+        this.maxX=Double.MIN_VALUE;this.minX=Double.MAX_VALUE;this.maxY=Double.MIN_VALUE;this.minY=Double.MAX_VALUE;
         if(angleFlag==1) {
             for(int i=0;i<pointNum;i++){
                 double x1=this.x[i],y1=this.y[i];
@@ -76,6 +77,11 @@ public class Particle implements Cloneable,Serializable{
                 this.y[i]=x1-x0+y0;
                 centreX+=this.x[i];
                 centreY+=this.y[i];
+
+                if(x[i]>this.maxX) this.maxX=x[i];
+                else if(x[i]<this.minX) this.minX=x[i];
+                if(y[i]>this.maxY) this.maxY=y[i];
+                else if(y[i]<this.minY) this.minY=y[i];
             }
             this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum); //中心应该不会变化
         }
@@ -86,6 +92,10 @@ public class Particle implements Cloneable,Serializable{
                 this.y[i]=y0-y1+y0;
                 centreX+=this.x[i];
                 centreY+=this.y[i];
+                if(x[i]>this.maxX) this.maxX=x[i];
+                else if(x[i]<this.minX) this.minX=x[i];
+                if(y[i]>this.maxY) this.maxY=y[i];
+                else if(y[i]<this.minY) this.minY=y[i];
             }
             this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
         }
@@ -96,6 +106,10 @@ public class Particle implements Cloneable,Serializable{
                 this.y[i]=x0-x1+y0;
                 centreX+=this.x[i];
                 centreY+=this.y[i];
+                if(x[i]>this.maxX) this.maxX=x[i];
+                else if(x[i]<this.minX) this.minX=x[i];
+                if(y[i]>this.maxY) this.maxY=y[i];
+                else if(y[i]<this.minY) this.minY=y[i];
             }
             this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
         }
@@ -106,6 +120,10 @@ public class Particle implements Cloneable,Serializable{
                 this.y[i]=y1-y0+y0;
                 centreX+=this.x[i];
                 centreY+=this.y[i];
+                if(x[i]>this.maxX) this.maxX=x[i];
+                else if(x[i]<this.minX) this.minX=x[i];
+                if(y[i]>this.maxY) this.maxY=y[i];
+                else if(y[i]<this.minY) this.minY=y[i];
             }
             this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
         }
@@ -116,6 +134,10 @@ public class Particle implements Cloneable,Serializable{
                 this.y[i]=y0-y1+y0;
                 centreX+=this.x[i];
                 centreY+=this.y[i];
+                if(x[i]>this.maxX) this.maxX=x[i];
+                else if(x[i]<this.minX) this.minX=x[i];
+                if(y[i]>this.maxY) this.maxY=y[i];
+                else if(y[i]<this.minY) this.minY=y[i];
             }
             this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
         }
@@ -126,6 +148,10 @@ public class Particle implements Cloneable,Serializable{
                 this.y[i]=x0-x1+y0;
                 centreX+=this.x[i];
                 centreY+=this.y[i];
+                if(x[i]>this.maxX) this.maxX=x[i];
+                else if(x[i]<this.minX) this.minX=x[i];
+                if(y[i]>this.maxY) this.maxY=y[i];
+                else if(y[i]<this.minY) this.minY=y[i];
             }
             this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
         }
@@ -136,6 +162,10 @@ public class Particle implements Cloneable,Serializable{
                 this.y[i]=x1-x0+y0;
                 centreX+=this.x[i];
                 centreY+=this.y[i];
+                if(x[i]>this.maxX) this.maxX=x[i];
+                else if(x[i]<this.minX) this.minX=x[i];
+                if(y[i]>this.maxY) this.maxY=y[i];
+                else if(y[i]<this.minY) this.minY=y[i];
             }
             this.centerPoint=new CenterPoint(centreX/pointNum,centreY/pointNum);
         }

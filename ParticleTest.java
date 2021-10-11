@@ -30,12 +30,21 @@ public class ParticleTest {
     public static MyPoint[] p1=new MyPoint[6],p2=new MyPoint[4];
 
     public static void main(String[] args) throws CloneNotSupportedException {
+        Long startTime = System.currentTimeMillis();
+
         ReadAndInit();
         ReadConnectFile();
         Init();
+
 //        PSO(200);
-        Draw();
+        qLearning(1);
+
 //        TestMyself();
+
+        Long endTime = System.currentTimeMillis();
+        double time=((double)(endTime - startTime))/1000;
+        System.out.println("花费时间" + (time) + "s");
+        Draw();
     }
 
     private static int getRandomNumberInRange(int min, int max) { //含min和max
@@ -49,14 +58,185 @@ public class ParticleTest {
     }
 
     public static void TestMyself(){
-        for(int i=0;i<ModuleNum;i++){
-            allBest[i].adjustAngle(6);
+        p[5].Move(100,200);
+        p[5].adjustAngle(3);
+        double vx=0,vy=0;  //出界判断
+        if(p[5].getMaxX()>AreaBoundary[2].getX()) {
+            vx = AreaBoundary[2].getX()-p[5].getMaxX();
+        }
+        else if(p[5].getMinX()<AreaBoundary[0].getX()) {
+            vx = AreaBoundary[0].getX()-p[5].getMinX();
+        }
+        if(p[5].getMaxY()>AreaBoundary[2].getY()) {
+            vy = AreaBoundary[2].getY()-p[5].getMaxY();
+        }
+        else if(p[5].getMinY()<AreaBoundary[0].getY()) {
+            vy = AreaBoundary[0].getY()-p[5].getMinY();
+        }
+        p[5].Move(vx,vy);
+    }
+
+    public static void qLearning(int maxN){    //0-11: stay 上下左右 90 180 270 MX MY MXR90 MYR90
+        double epsilon=0,disRate=1,overlapRate=10;
+        double StepLength=50;
+        while (maxN--!=0){
+            for(int i=0;i<ModuleNum;i++) p[i].Move2(400,400);
+            for(int j=0;j<200;j++){
+                int []randArr=randomCommon(16,ModuleNum);
+                for (int i : randArr) {  //可改为随机扰动
+
+//                    double StepLength=50*Math.random();
+
+                    if (Math.random() < epsilon) {
+                        int tempStep = getRandomNumberInRange(0, 11);
+                        if (tempStep >= 1 && tempStep <= 4) {
+                            if (tempStep == 4) p[i].Move(StepLength, 0);
+                            else if (tempStep == 3) p[i].Move(-StepLength, 0);
+                            else if (tempStep == 2) p[i].Move(0, -StepLength);
+                            else p[i].Move(0, StepLength);
+                        } else if (tempStep >= 5) {
+                            p[i].adjustAngle(tempStep - 4);
+                        }
+
+                        double vx = 0, vy = 0;  //出界判断
+                        if (p[i].getMaxX() > AreaBoundary[2].getX()) {
+                            vx = AreaBoundary[2].getX() - p[i].getMaxX();
+                        } else if (p[i].getMinX() < AreaBoundary[0].getX()) {
+                            vx = AreaBoundary[0].getX() - p[i].getMinX();
+                        }
+                        if (p[i].getMaxY() > AreaBoundary[2].getY()) {
+                            vy = AreaBoundary[2].getY() - p[i].getMaxY();
+                        } else if (p[i].getMinY() < AreaBoundary[0].getY()) {
+                            vy = AreaBoundary[0].getY() - p[i].getMinY();
+                        }
+                        p[i].Move(vx, vy);
+                    } else {
+                        int bestStep = 0;
+                        double tempSum = Double.MAX_VALUE;
+                        double bestStepLength=StepLength;
+                        for (int tempStep = 0; tempStep <= 11; tempStep++) {
+//                            StepLength=50*Math.random();
+                            Particle tempParticle = SerializationUtils.clone(p[i]);
+                            if (tempStep >= 1 && tempStep <= 4) {
+                                if (tempStep == 4) tempParticle.Move(StepLength, 0);
+                                else if (tempStep == 3) tempParticle.Move(-StepLength, 0);
+                                else if (tempStep == 2) tempParticle.Move(0, -StepLength);
+                                else tempParticle.Move(0, StepLength);
+                            } else if (tempStep >= 5) {
+                                tempParticle.adjustAngle(tempStep - 4);
+                            }
+
+                            double vx = 0, vy = 0;  //出界判断
+                            if (tempParticle.getMaxX() > AreaBoundary[2].getX()) {
+                                vx = AreaBoundary[2].getX() - tempParticle.getMaxX();
+                            } else if (tempParticle.getMinX() < AreaBoundary[0].getX()) {
+                                vx = AreaBoundary[0].getX() - tempParticle.getMinX();
+                            }
+                            if (tempParticle.getMaxY() > AreaBoundary[2].getY()) {
+                                vy = AreaBoundary[2].getY() - tempParticle.getMaxY();
+                            } else if (tempParticle.getMinY() < AreaBoundary[0].getY()) {
+                                vy = AreaBoundary[0].getY() - tempParticle.getMinY();
+                            }
+                            tempParticle.Move(vx, vy);
+
+                            double tempOverlap = 0, tempDis = 0;
+                            for (int k = 0; k < ModuleNum; k++) {
+                                if(k==i) continue;
+                                tempOverlap += calOverlap(tempParticle, p[k]);
+                            }
+                            for (ArrayList<Ports> ports : LinkSET) {
+                                for (int tempJ = 0; tempJ < ports.size(); tempJ++) {
+                                    if (tempParticle.portsArrayList.contains(ports.get(tempJ))) {
+                                        for (int tempI = 0; tempI < ports.size(); tempI++) {
+                                            if (tempI == tempJ) continue;
+                                            tempDis += getDist(ports.get(tempJ).getCenterPoint(), ports.get(tempI).getCenterPoint());
+                                        }
+                                    }
+                                }
+                            }
+                            if (tempDis * disRate + tempOverlap * overlapRate < tempSum) {
+                                bestStep = tempStep;
+                                tempSum = tempDis * disRate + tempOverlap * overlapRate;
+                                bestStepLength=StepLength;
+                            }
+                        }
+                        if (bestStep >= 1 && bestStep <= 4) {
+                            if (bestStep == 4) p[i].Move(bestStepLength, 0);   //StepLength's Problem
+                            else if (bestStep == 3) p[i].Move(-bestStepLength, 0);
+                            else if (bestStep == 2) p[i].Move(0, -bestStepLength);
+                            else p[i].Move(0, bestStepLength);
+                        } else if (bestStep >= 5) {
+                            p[i].adjustAngle(bestStep - 4);
+                        }
+
+                        double vx = 0, vy = 0;  //出界判断
+                        if (p[i].getMaxX() > AreaBoundary[2].getX()) {
+                            vx = AreaBoundary[2].getX() - p[i].getMaxX();
+                        } else if (p[i].getMinX() < AreaBoundary[0].getX()) {
+                            vx = AreaBoundary[0].getX() - p[i].getMinX();
+                        }
+                        if (p[i].getMaxY() > AreaBoundary[2].getY()) {
+                            vy = AreaBoundary[2].getY() - p[i].getMaxY();
+                        } else if (p[i].getMinY() < AreaBoundary[0].getY()) {
+                            vy = AreaBoundary[0].getY() - p[i].getMinY();
+                        }
+                        p[i].Move(vx, vy);
+                    }
+                }
+                System.out.println(j);
+            }
+            System.out.println(maxN);
+
+            for (ArrayList<Ports> ports : LinkSET) {
+                for (int j = 0; j < ports.size(); j++) {
+                    ports.get(j).setSumDis(0);
+                    for (int k = 0; k < ports.size(); k++) {
+                        if (k == j) continue;
+                        ports.get(j).sumDis += getDist(ports.get(j).getCenterPoint(), ports.get(k).getCenterPoint());
+                    }
+                }
+            }
+
+            fitnessFunction();
+            double tempSum=0;
+            for(int j=0;j<ModuleNum;j++){  //更新个体最优
+                if(p[j].getSumF()<pBest[j].getSumF()) {
+                    pBest[j] = (Particle) SerializationUtils.clone(p[j]);
+//                    System.out.println("Changed:"+j);
+                }
+                tempSum+=p[j].getSumF(1);
+            }
+
+            double tempOverlap=0;
+            for(int k=0;k<ModuleNum;k++)
+                for(int j=0;j<ModuleNum;j++){
+                    if(j==k) continue;
+                    else{
+                        tempOverlap+=(calOverlap(p[k],p[j]));
+                    }
+                }
+
+            if(bestF >tempSum+tempOverlap) {
+                bestF = tempSum+tempOverlap;
+                bestOverlap=tempOverlap;
+                for(int j=0;j<ModuleNum;j++)
+                    allBest[j]=(Particle) SerializationUtils.clone(p[j]);
+            }
         }
     }
 
-//    public static void qLearning(int maxN){
-//        for(int i=0;i<ModuleNum;i++)
-//    }
+    public static int[] randomCommon(int max, int n){
+        if(max<0||n<=0) return new int[1];
+        Random random=new Random();
+        int[] result = new int[n],flag=new int[n];
+        for(int i=0;i<result.length;i++) {
+            int x = random.nextInt(n);
+            while (flag[x]==1) x=random.nextInt(n);
+            result[i]=x;
+            flag[x]=1;
+        }
+        return result;
+    }
 
     public static void PSO(int max) {
         for(int i=0;i<max;i++){
@@ -88,7 +268,7 @@ public class ParticleTest {
 
                 p[j].Move(vx,vy);
 
-                boolean moveAble1=false,moveAble2=false;
+                boolean moveAble1=false,moveAble2=false;  //正确性存疑
                 if(p[j].getMaxX()>AreaBoundary[2].getX()) {
                     vx = AreaBoundary[2].getX();
                     moveAble1 = true;
@@ -172,8 +352,6 @@ public class ParticleTest {
                 if(j==i) continue;
                 bestSumOverlap+=calOverlap(p[i],p[j]);
             }
-//        System.arraycopy(p, 0, pBest, 0, ModuleNum);
-//        System.arraycopy(p, 0, allBest, 0, ModuleNum);
         for(int i=0;i<ModuleNum;i++)  //↑
         {
             pBest[i]=(Particle) SerializationUtils.clone(p[i]);
