@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class jpanelTest extends JPanel {
-    public Particle[] p=ParticleTest.p;
+    public Particle[] particles =ParticleTest.p;
     public MyPoint[] AreaBoundary=ParticleTest.AreaBoundary;
     public int padding=100;
 
@@ -18,8 +18,8 @@ public class jpanelTest extends JPanel {
 
         g.setColor(Color.YELLOW);
         for(int i=0;i<ParticleTest.ModuleNum;i++){
-            for(int j=0;j<p[i].getPointNum();j++){
-                g.drawLine((int)p[i].getX(j)+padding,(int)p[i].getY(j)+padding,(int)p[i].getX(j+1)+padding,(int)p[i].getY(j+1)+padding);
+            for(int j = 0; j< particles[i].getPointNum(); j++){
+                g.drawLine((int) particles[i].getX(j)+padding,(int) particles[i].getY(j)+padding,(int) particles[i].getX(j+1)+padding,(int) particles[i].getY(j+1)+padding);
             }
         }
 

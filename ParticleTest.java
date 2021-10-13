@@ -24,7 +24,7 @@ public class ParticleTest {
     public static double allSumUp=0,bestSumOverlap=0;//总距离，总最佳overlap
     public static Random random=new Random();
 //    public static double rand=random.nextDouble()*10;
-    public static double c1=3,c2=1.2;
+    public static double c1=3,c2=1.2,disRate=0.1,overlapRate=10;
     public static ArrayList<ArrayList<Ports>> LinkSET=new ArrayList<>();
 
     public static MyPoint[] p1=new MyPoint[6],p2=new MyPoint[4];
@@ -58,34 +58,23 @@ public class ParticleTest {
     }
 
     public static void TestMyself(){
-        p[5].Move(100,200);
-        p[5].adjustAngle(3);
-        double vx=0,vy=0;  //出界判断
-        if(p[5].getMaxX()>AreaBoundary[2].getX()) {
-            vx = AreaBoundary[2].getX()-p[5].getMaxX();
+        for(int i=0;i<ModuleNum;i++){
+            p[i].Move(400,400);
         }
-        else if(p[5].getMinX()<AreaBoundary[0].getX()) {
-            vx = AreaBoundary[0].getX()-p[5].getMinX();
-        }
-        if(p[5].getMaxY()>AreaBoundary[2].getY()) {
-            vy = AreaBoundary[2].getY()-p[5].getMaxY();
-        }
-        else if(p[5].getMinY()<AreaBoundary[0].getY()) {
-            vy = AreaBoundary[0].getY()-p[5].getMinY();
-        }
-        p[5].Move(vx,vy);
+        for(int i=0;i<ModuleNum;i++)
+            allBest[i]=SerializationUtils.clone(p[i]);
     }
 
     public static void qLearning(int maxN){    //0-11: stay 上下左右 90 180 270 MX MY MXR90 MYR90
-        double epsilon=0,disRate=1,overlapRate=10;
-        double StepLength=50;
+        double epsilon=0;
+//        double StepLength=50;
         while (maxN--!=0){
             for(int i=0;i<ModuleNum;i++) p[i].Move2(400,400);
             for(int j=0;j<200;j++){
                 int []randArr=randomCommon(16,ModuleNum);
                 for (int i : randArr) {  //可改为随机扰动
 
-//                    double StepLength=50*Math.random();
+                    double StepLength=300*Math.random();
 
                     if (Math.random() < epsilon) {
                         int tempStep = getRandomNumberInRange(0, 11);
@@ -115,7 +104,7 @@ public class ParticleTest {
                         double tempSum = Double.MAX_VALUE;
                         double bestStepLength=StepLength;
                         for (int tempStep = 0; tempStep <= 11; tempStep++) {
-//                            StepLength=50*Math.random();
+                            StepLength=100*Math.random();
                             Particle tempParticle = SerializationUtils.clone(p[i]);
                             if (tempStep >= 1 && tempStep <= 4) {
                                 if (tempStep == 4) tempParticle.Move(StepLength, 0);
@@ -210,17 +199,16 @@ public class ParticleTest {
             double tempOverlap=0;
             for(int k=0;k<ModuleNum;k++)
                 for(int j=0;j<ModuleNum;j++){
-                    if(j==k) continue;
-                    else{
+                    if(j!=k){
                         tempOverlap+=(calOverlap(p[k],p[j]));
                     }
                 }
 
-            if(bestF >tempSum+tempOverlap) {
-                bestF = tempSum+tempOverlap;
+            if(bestF >tempSum*disRate+tempOverlap*overlapRate) {
+                bestF = tempSum*disRate+tempOverlap*overlapRate;
                 bestOverlap=tempOverlap;
                 for(int j=0;j<ModuleNum;j++)
-                    allBest[j]=(Particle) SerializationUtils.clone(p[j]);
+                    allBest[j]=p[j];
             }
         }
     }
@@ -357,7 +345,7 @@ public class ParticleTest {
             pBest[i]=(Particle) SerializationUtils.clone(p[i]);
             allBest[i]=(Particle) SerializationUtils.clone(p[i]);
         }
-        bestF =allSumUp+bestSumOverlap;
+        bestF =allSumUp*disRate+bestSumOverlap*overlapRate;
     }
 
     public static void fitnessFunction(){
