@@ -4,13 +4,15 @@ import java.io.Serializable;
 
 public class Ports implements Serializable {
     private int portPointNum;
+    private String ruleName;
     private double[] x=new double[portPointNum];
     private double[] y=new double[portPointNum];
     private CenterPoint centerPoint=new CenterPoint(getCenterX(),getCenterY());
     public double sumDis;
 
-    public Ports(int portPointNum,double[] x,double[] y) {
+    public Ports(int portPointNum,double[] x,double[] y,String ruleName) {
         this.portPointNum=portPointNum;
+        this.ruleName=ruleName;
         this.x=x;
         this.y=y;
         double centreX=0,centreY=0;
@@ -19,6 +21,39 @@ public class Ports implements Serializable {
             centreY+=y[i];
         }
         this.centerPoint=new CenterPoint(centreX/portPointNum,centreY/portPointNum);
+    }
+
+    public String getRuleName() {
+        return ruleName;
+    }
+
+    public int getPortPointNum() {
+        return portPointNum;
+    }
+
+    public double getX(int i) {
+        while (i >= portPointNum) i -= portPointNum;
+        return x[i];
+    }
+
+    public double getY(int i) {
+        while (i >= portPointNum) i -= portPointNum;
+        return y[i];
+    }
+
+    public void adjustAngle(CenterPoint center,int angleFlag){
+        double x0=center.getX(),y0=center.getY();
+        double centreX=0,centreY=0;
+        if(angleFlag==1) {
+            for (int i = 0; i < portPointNum; i++) {
+                double x1 = this.x[i], y1 = this.y[i];
+                this.x[i] = y0 - y1 + x0;
+                this.y[i] = x1 - x0 + y0;
+                centreX += this.x[i];
+                centreY += this.y[i];
+            }
+            this.centerPoint = new CenterPoint(centreX / portPointNum, centreY / portPointNum);
+        }
     }
 
 
