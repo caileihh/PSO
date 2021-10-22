@@ -54,6 +54,66 @@ public class Ports implements Serializable {
             }
             this.centerPoint = new CenterPoint(centreX / portPointNum, centreY / portPointNum);
         }
+        else if(angleFlag==2){
+            for (int i = 0; i < portPointNum; i++) {
+                double x1 = this.x[i], y1 = this.y[i];
+                this.x[i] = x0 - x1 + x0;;
+                this.y[i] = y0 - y1 + y0;
+                centreX += this.x[i];
+                centreY += this.y[i];
+            }
+            this.centerPoint = new CenterPoint(centreX / portPointNum, centreY / portPointNum);
+        }
+        else if(angleFlag==3){
+            for(int i=0;i<portPointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=y1-y0+x0;
+                this.y[i]=x0-x1+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/portPointNum,centreY/portPointNum);
+        }
+        else if(angleFlag==4){
+            for(int i=0;i<portPointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=x0-x1+x0;
+                this.y[i]=y1-y0+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/portPointNum,centreY/portPointNum);
+        }
+        else if(angleFlag==5){
+            for(int i=0;i<portPointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=x1-x0+x0;
+                this.y[i]=y0-y1+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/portPointNum,centreY/portPointNum);
+        }
+        else if(angleFlag==6){
+            for(int i=0;i<portPointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=y0-y1+x0;
+                this.y[i]=x0-x1+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/portPointNum,centreY/portPointNum);
+        }
+        else if(angleFlag==7){
+            for(int i=0;i<portPointNum;i++){
+                double x1=this.x[i],y1=this.y[i];
+                this.x[i]=y1-y0+x0;
+                this.y[i]=x1-x0+y0;
+                centreX+=this.x[i];
+                centreY+=this.y[i];
+            }
+            this.centerPoint=new CenterPoint(centreX/portPointNum,centreY/portPointNum);
+        }
     }
 
 

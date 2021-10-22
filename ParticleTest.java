@@ -59,15 +59,15 @@ public class ParticleTest {
     }
 
     public static void TestMyself(){
-        List<String> list=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\Module.txt");
-        OutPutResultTxtFile(Transition());
+        p[13].Move(270,435);
+        judgeOutOfBounds(p[13]);
     }
 
     public static void qLearning(int maxN){    //0-11: stay 上下左右 90 180 270 MX MY MXR90 MYR90
         double epsilon=0;
 //        double StepLength=50;
         while (maxN--!=0){
-//            for(int i=0;i<ModuleNum;i++) p[i].Move2(400,400);
+            for(int i=0;i<ModuleNum;i++) p[i].Move2(400,400);
             for(int j=0;j<200;j++){
                 int []randArr=randomCommon(16,ModuleNum);
                 for (int i : randArr) {  //可改为随机扰动
@@ -178,14 +178,14 @@ public class ParticleTest {
 
     public static void judgeOutOfBounds(Particle par){
         double vx = 0, vy = 0;  //出界判断
-        if (par.getMaxX() > AreaBoundary[2].getX()) {
+        if (par.getMaxX() > AreaBoundary[2].getX()-Particle.shellWidth) {
             vx = AreaBoundary[2].getX() - par.getMaxX()-Particle.shellWidth;
-        } else if (par.getMinX() < AreaBoundary[0].getX()) {
+        } else if (par.getMinX() < AreaBoundary[0].getX()+Particle.shellWidth) {
             vx = AreaBoundary[0].getX() - par.getMinX()+Particle.shellWidth;
         }
-        if (par.getMaxY() > AreaBoundary[2].getY()) {
+        if (par.getMaxY() > AreaBoundary[2].getY()-Particle.shellWidth) {
             vy = AreaBoundary[2].getY() - par.getMaxY()-Particle.shellWidth;
-        } else if (par.getMinY() < AreaBoundary[0].getY()) {
+        } else if (par.getMinY() < AreaBoundary[0].getY()+Particle.shellWidth) {
             vy = AreaBoundary[0].getY() - par.getMinY()+Particle.shellWidth;
         }
         par.Move(vx, vy);

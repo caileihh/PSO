@@ -9,7 +9,7 @@ public class Particle implements Cloneable, Serializable {
     private double[] y;
     private double[] shellX, shellY;
     private double maxX, maxY, minX, minY;
-    public static final double shellWidth = 7.5;
+    public static final double shellWidth = 15;
     private String name;
     private String ruleName;
     public CenterPoint centerPoint = new CenterPoint(getCenterX(), getCenterY());
