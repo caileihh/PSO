@@ -9,7 +9,7 @@ public class Particle implements Cloneable, Serializable {
     private double[] y;
     private double[] shellX, shellY;
     private double maxX, maxY, minX, minY;
-    public static final double shellWidth = 15;
+
     private String name;
     private String ruleName;
     public CenterPoint centerPoint = new CenterPoint(getCenterX(), getCenterY());
@@ -32,6 +32,7 @@ public class Particle implements Cloneable, Serializable {
 
     public Particle() {
     }
+
 
     public double getShellX(int i) {
         while (i >= pointNum) i -= pointNum;
@@ -82,6 +83,7 @@ public class Particle implements Cloneable, Serializable {
     }
 
     public void adjustAngle(int angleFlag) {  //可优化   //逆时针为正方向
+        if(angleFlag==0) return;
         double x0 = getCenterX(), y0 = getCenterY();
         double centreX = 0, centreY = 0;
         this.maxX = Double.MIN_VALUE;
@@ -310,47 +312,47 @@ public class Particle implements Cloneable, Serializable {
         if (a[0] * a[1] * a[2] * a[3] == 0) {
             for (int i = 0; i < pointNum; i++) {
                 if (x[i] == maxX) {
-                    shellX[i] = x[i] + shellWidth;
+                    shellX[i] = x[i] + ParticleTest.shellWidth;
                     if (y[i] == maxY) {
-                        shellY[i] = y[i] + shellWidth;
+                        shellY[i] = y[i] + ParticleTest.shellWidth;
                     } else if (y[i] == minY) {
-                        shellY[i] = y[i] - shellWidth;
+                        shellY[i] = y[i] - ParticleTest.shellWidth;
                     } else {
-                        if (a[1] == 0) shellY[i] = y[i] - shellWidth;
-                        else if (a[2] == 0) shellY[i] = y[i] + shellWidth;
+                        if (a[1] == 0) shellY[i] = y[i] - ParticleTest.shellWidth;
+                        else if (a[2] == 0) shellY[i] = y[i] + ParticleTest.shellWidth;
                     }
                 } else if (x[i] == minX) {
-                    shellX[i] = x[i] - shellWidth;
+                    shellX[i] = x[i] - ParticleTest.shellWidth;
                     if (y[i] == maxY) {
-                        shellY[i] = y[i] + shellWidth;
+                        shellY[i] = y[i] + ParticleTest.shellWidth;
                     } else if (y[i] == minY) {
-                        shellY[i] = y[i] - shellWidth;
+                        shellY[i] = y[i] - ParticleTest.shellWidth;
                     } else {
-                        if (a[0] == 0) shellY[i] = y[i] - shellWidth;
-                        else if (a[3] == 0) shellY[i] = y[i] + shellWidth;
+                        if (a[0] == 0) shellY[i] = y[i] - ParticleTest.shellWidth;
+                        else if (a[3] == 0) shellY[i] = y[i] + ParticleTest.shellWidth;
                     }
                 } else {
                     if (y[i] == maxY) {
-                        shellY[i] = y[i] + shellWidth;
-                        if (a[1] == 0 || a[2] == 0) shellX[i] = x[i] + shellWidth;
-                        else if (a[0] == 0 || a[3] == 0) shellX[i] = x[i] - shellWidth;
+                        shellY[i] = y[i] + ParticleTest.shellWidth;
+                        if (a[1] == 0 || a[2] == 0) shellX[i] = x[i] + ParticleTest.shellWidth;
+                        else if (a[0] == 0 || a[3] == 0) shellX[i] = x[i] - ParticleTest.shellWidth;
                     } else if (y[i] == minY) {
-                        shellY[i] = y[i] - shellWidth;
-                        if (a[0] == 0 || a[3] == 0) shellX[i] = x[i] - shellWidth;
-                        else if (a[1] == 0 || a[2] == 0) shellX[i] = x[i] + shellWidth;
+                        shellY[i] = y[i] - ParticleTest.shellWidth;
+                        if (a[0] == 0 || a[3] == 0) shellX[i] = x[i] - ParticleTest.shellWidth;
+                        else if (a[1] == 0 || a[2] == 0) shellX[i] = x[i] + ParticleTest.shellWidth;
                     } else {
                         if (a[0] == 0) {
-                            shellX[i] = x[i] - shellWidth;
-                            shellY[i] = y[i] - shellWidth;
+                            shellX[i] = x[i] - ParticleTest.shellWidth;
+                            shellY[i] = y[i] - ParticleTest.shellWidth;
                         } else if (a[1] == 0) {
-                            shellX[i] = x[i] + shellWidth;
-                            shellY[i] = y[i] - shellWidth;
+                            shellX[i] = x[i] + ParticleTest.shellWidth;
+                            shellY[i] = y[i] - ParticleTest.shellWidth;
                         } else if (a[2] == 0) {
-                            shellX[i] = x[i] + shellWidth;
-                            shellY[i] = y[i] + shellWidth;
+                            shellX[i] = x[i] + ParticleTest.shellWidth;
+                            shellY[i] = y[i] + ParticleTest.shellWidth;
                         } else {
-                            shellX[i] = x[i] - shellWidth;
-                            shellY[i] = y[i] + shellWidth;
+                            shellX[i] = x[i] - ParticleTest.shellWidth;
+                            shellY[i] = y[i] + ParticleTest.shellWidth;
                         }
                     }
                 }
@@ -358,13 +360,13 @@ public class Particle implements Cloneable, Serializable {
         } else {
             for (int i = 0; i < pointNum; i++) {
                 if (x[i] == this.maxX) {
-                    shellX[i] = x[i] + shellWidth;
-                    if (y[i] == this.maxY) shellY[i] = y[i] + shellWidth;
-                    else shellY[i] = y[i] - shellWidth;
+                    shellX[i] = x[i] + ParticleTest.shellWidth;
+                    if (y[i] == this.maxY) shellY[i] = y[i] + ParticleTest.shellWidth;
+                    else shellY[i] = y[i] - ParticleTest.shellWidth;
                 } else if (x[i] == this.minX) {
-                    shellX[i] = x[i] - shellWidth;
-                    if (y[i] == this.minY) shellY[i] = y[i] - shellWidth;
-                    else shellY[i] = y[i] + shellWidth;
+                    shellX[i] = x[i] - ParticleTest.shellWidth;
+                    if (y[i] == this.minY) shellY[i] = y[i] - ParticleTest.shellWidth;
+                    else shellY[i] = y[i] + ParticleTest.shellWidth;
                 }
             }
         }

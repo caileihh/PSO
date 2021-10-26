@@ -15,16 +15,17 @@ import javax.swing.*;
 public class ParticleTest {
     public static MyPoint[] AreaBoundary=new MyPoint[4];  //顺时针为正方向
     public static final int ModuleNum=16;
-    public static final String  fileNumber="16-12529";
+    public static final String  fileNumber="16-12510";
     public static Particle[] p=new Particle[ModuleNum];
     public static MyPoint[] v=new MyPoint[ModuleNum];
     public static Particle[] pBest=new Particle[ModuleNum];   //个体最优
     public static Particle[] allBest=new Particle[ModuleNum];   //全局最优
     public static double bestF =0,bestOverlap=0,eps=1e-6; //最佳总值,总overlap
     public static double allSumUp=0,bestSumOverlap=0;//总距离，总最佳overlap
+    public static double shellWidth = 17.5;
     public static Random random=new Random();
 //    public static double rand=random.nextDouble()*10;
-    public static double c1=3,c2=1.2,disRate=0.0001,overlapRate=10000;
+    public static double c1=3,c2=1.2,disRate=0.001,overlapRate=10000;
     public static ArrayList<ArrayList<Ports>> LinkSET=new ArrayList<>();
 
     public static MyPoint[] p1=new MyPoint[6],p2=new MyPoint[4];
@@ -69,11 +70,13 @@ public class ParticleTest {
         while (maxN--!=0){
             for(int i=0;i<ModuleNum;i++) p[i].Move2(400,400);
             for(int j=0;j<200;j++){
-                int []randArr=randomCommon(16,ModuleNum);
+                int []randArr=randomCommon(ModuleNum,ModuleNum);
                 for (int i : randArr) {  //可改为随机扰动
-                    double StepLength=300*Math.random();
-
-                    if (Math.random() < epsilon) {
+                    double StepLength=100*Math.random();
+                    if(j<=100)
+                        StepLength=100*Math.random();
+                    else StepLength=300*Math.random();
+                    if (Math.random() < epsilon&&j<30) {
                         int tempStep = getRandomNumberInRange(0, 11);
                         if (tempStep >= 1 && tempStep <= 4) {
                             if (tempStep == 4) p[i].Move(StepLength, 0);
@@ -90,7 +93,9 @@ public class ParticleTest {
                         double tempSum = Double.MAX_VALUE;
                         double bestStepLength=StepLength;
                         for (int tempStep = 0; tempStep <= 11; tempStep++) {
-                            StepLength=100*Math.random();
+//                            if(j<=100)
+                                StepLength=100*Math.random();
+//                            else StepLength=700*Math.random();
                             Particle tempParticle = SerializationUtils.clone(p[i]);
                             if (tempStep >= 1 && tempStep <= 4) {
                                 if (tempStep == 4) tempParticle.Move(StepLength, 0);
@@ -137,6 +142,89 @@ public class ParticleTest {
                 }
                 System.out.println(j);
             }
+
+            shellWidth=12.5;
+            for(int i=0;i<ModuleNum;i++) p[i].resetOutShell();
+
+            for(int j=0;j<10;j++){
+                int []randArr=randomCommon(ModuleNum,ModuleNum);
+                for (int i : randArr) {  //可改为随机扰动
+                    int bestStep = 0,bestAngle=0;
+                    double StepLength=1000*Math.random();
+                    double bestStepLength=StepLength;
+//                    if(j<=50)
+                        StepLength=100*Math.random();
+//                    else StepLength=300*Math.random();
+                    if (Math.random() < epsilon) {
+                        int tempStep = getRandomNumberInRange(0, 11);
+                        if (tempStep >= 1 && tempStep <= 4) {
+                            if (tempStep == 4) p[i].Move(StepLength, 0);
+                            else if (tempStep == 3) p[i].Move(-StepLength, 0);
+                            else if (tempStep == 2) p[i].Move(0, -StepLength);
+                            else p[i].Move(0, StepLength);
+                        } else if (tempStep >= 5) {
+                            p[i].adjustAngle(tempStep - 4);
+                        }
+
+                        judgeOutOfBounds(p[i]);
+                    } else {
+
+                        double tempSum = Double.MAX_VALUE;
+
+                        for (int tempStep = 0; tempStep <= 4; tempStep++) {
+                            for (int angle = 0; angle <= 7; angle++) {
+//                                if (j <= 50)
+                                    StepLength = 100 * Math.random();
+//                                else StepLength = 700 * Math.random();
+                                Particle tempParticle = SerializationUtils.clone(p[i]);
+                                if (tempStep >= 1) {
+                                    if (tempStep == 4) tempParticle.Move(StepLength, 0);
+                                    else if (tempStep == 3) tempParticle.Move(-StepLength, 0);
+                                    else if (tempStep == 2) tempParticle.Move(0, -StepLength);
+                                    else tempParticle.Move(0, StepLength);
+                                    judgeOutOfBounds(tempParticle);
+                                }
+                                tempParticle.adjustAngle(angle);
+
+                                judgeOutOfBounds(tempParticle);
+
+                                double tempOverlap = 0, tempDis = 0;
+                                for (int k = 0; k < ModuleNum; k++) {
+                                    if (k == i) continue;
+                                    tempOverlap += calOverlap(tempParticle, p[k]);
+                                }
+                                for (ArrayList<Ports> ports : LinkSET) {
+                                    for (int tempJ = 0; tempJ < ports.size(); tempJ++) {
+                                        if (p[i].portsArrayList.contains(ports.get(tempJ))) {
+                                            for (int tempI = 0; tempI < ports.size(); tempI++) {
+                                                if (tempI == tempJ) continue;
+                                                tempDis += getDist(tempParticle.portsArrayList.get(p[i].portsArrayList.indexOf(ports.get(tempJ))).getCenterPoint(), ports.get(tempI).getCenterPoint());
+                                            }
+                                        }
+                                    }
+                                }
+                                if (tempDis * disRate + tempOverlap * overlapRate < tempSum) {
+                                    bestStep = tempStep;
+                                    bestAngle=angle;
+                                    tempSum = tempDis * disRate + tempOverlap * overlapRate;
+                                    bestStepLength = StepLength;
+                                }
+                            }
+                        }
+                        if (bestStep >= 1) {
+                            if (bestStep == 4) p[i].Move(bestStepLength, 0);   //StepLength's Problem
+                            else if (bestStep == 3) p[i].Move(-bestStepLength, 0);
+                            else if (bestStep == 2) p[i].Move(0, -bestStepLength);
+                            else p[i].Move(0, bestStepLength);
+                            judgeOutOfBounds(p[i]);
+                        }
+                        p[i].adjustAngle(bestAngle);
+                        judgeOutOfBounds(p[i]);
+                    }
+                }
+                System.out.println(j);
+            }
+
             System.out.println(maxN);
 
             for (ArrayList<Ports> ports : LinkSET) {
@@ -170,23 +258,22 @@ public class ParticleTest {
             if(bestF >tempSum*disRate+tempOverlap*overlapRate) {
                 bestF = tempSum*disRate+tempOverlap*overlapRate;
                 bestOverlap=tempOverlap;
-                for(int j=0;j<ModuleNum;j++)
-                    allBest[j]=p[j];
+                System.arraycopy(p, 0, allBest, 0, ModuleNum);
             }
         }
     }
 
     public static void judgeOutOfBounds(Particle par){
         double vx = 0, vy = 0;  //出界判断
-        if (par.getMaxX() > AreaBoundary[2].getX()-Particle.shellWidth) {
-            vx = AreaBoundary[2].getX() - par.getMaxX()-Particle.shellWidth;
-        } else if (par.getMinX() < AreaBoundary[0].getX()+Particle.shellWidth) {
-            vx = AreaBoundary[0].getX() - par.getMinX()+Particle.shellWidth;
+        if (par.getMaxX() > AreaBoundary[2].getX()-shellWidth) {
+            vx = AreaBoundary[2].getX() - par.getMaxX()-shellWidth;
+        } else if (par.getMinX() < AreaBoundary[0].getX()+shellWidth) {
+            vx = AreaBoundary[0].getX() - par.getMinX()+shellWidth;
         }
-        if (par.getMaxY() > AreaBoundary[2].getY()-Particle.shellWidth) {
-            vy = AreaBoundary[2].getY() - par.getMaxY()-Particle.shellWidth;
-        } else if (par.getMinY() < AreaBoundary[0].getY()+Particle.shellWidth) {
-            vy = AreaBoundary[0].getY() - par.getMinY()+Particle.shellWidth;
+        if (par.getMaxY() > AreaBoundary[2].getY()-shellWidth) {
+            vy = AreaBoundary[2].getY() - par.getMaxY()-shellWidth;
+        } else if (par.getMinY() < AreaBoundary[0].getY()+shellWidth) {
+            vy = AreaBoundary[0].getY() - par.getMinY()+shellWidth;
         }
         par.Move(vx, vy);
     }
