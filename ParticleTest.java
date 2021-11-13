@@ -2,10 +2,10 @@ package Particle;
 
 import java.awt.*;
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.SerializationUtils;
@@ -15,14 +15,14 @@ import javax.swing.*;
 public class ParticleTest {
     public static MyPoint[] AreaBoundary=new MyPoint[4];  //顺时针为正方向
     public static final int ModuleNum=16;
-    public static final String  fileNumber="16-12510";
+    public static String  fileNumber="16-11004";        //总：0~20、100~120   5      13  18  20  101 102 持平：19 105  109
     public static Particle[] p=new Particle[ModuleNum];
     public static MyPoint[] v=new MyPoint[ModuleNum];
     public static Particle[] pBest=new Particle[ModuleNum];   //个体最优
     public static Particle[] allBest=new Particle[ModuleNum];   //全局最优
     public static double bestF =0,bestOverlap=0,eps=1e-6; //最佳总值,总overlap
     public static double allSumUp=0,bestSumOverlap=0;//总距离，总最佳overlap
-    public static double shellWidth = 17.5;
+    public static double shellWidth = 7.5;
     public static Random random=new Random();
 //    public static double rand=random.nextDouble()*10;
     public static double c1=3,c2=1.2,disRate=0.001,overlapRate=10000;
@@ -30,23 +30,120 @@ public class ParticleTest {
 
     public static MyPoint[] p1=new MyPoint[6],p2=new MyPoint[4];
 
-    public static void main(String[] args) throws CloneNotSupportedException {
+    public static void main(String[] args) throws CloneNotSupportedException, IOException ,NullPointerException{
         Long startTime = System.currentTimeMillis();
 
-        ReadAndInit();
-        ReadConnectFile();
-        Init();
 
-//        PSO(200);
-        qLearning(1);
+
+
+        for(int i=12140;i<12160;i++) {
+            String start = Integer.toString(ModuleNum);
+            fileNumber = start + "-" + i;
+            if (!new File("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber).exists()) continue;
+            try {
+                ReadAndInit();
+                ReadConnectFile();
+                Init();
+                qLearning(1);
+                OutPutResultTxtFile(Transition());
+
+//                writeEventualScore();
+
+//                File source = new File("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber + "\\judge.txt");
+//                File dest = new File("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber + "\\score1.txt");
+//                if (!dest.exists()) dest.createNewFile();
+//                copyFileUsingFileChannels(source, dest);
+
+//                writeOriginalResult();
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            }
+        }
+//        judge(12120,12140);
+
+
+
+
+
 
 //        TestMyself();
 
-        OutPutResultTxtFile(Transition());
         Long endTime = System.currentTimeMillis();
         double time=((double)(endTime - startTime))/1000;
         System.out.println("花费时间" + (time) + "s");
-        Draw();
+//        Draw();
+    }
+
+    public static void judge(int begin,int last){
+        int winNum=0,sum=0;
+        for(int i=begin;i<last;i++) {
+            {
+                String start = Integer.toString(ModuleNum);
+                String fileNumber = start + "-" + i;
+                if (!new File("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber).exists()) continue;
+                else sum++;
+                List<String> strings0=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber+"\\judge.txt");
+                List<String> strings1=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber+"\\score1.txt");
+                double rate0=Double.parseDouble(strings0.get(0).substring(strings0.get(0).indexOf(":")+1));
+                double length0=Double.parseDouble(strings0.get(1).substring(strings0.get(1).indexOf(":")+1));
+                double rate1=Double.parseDouble(strings1.get(0).substring(strings1.get(0).indexOf(":")+1));
+                double length1=Double.parseDouble(strings1.get(1).substring(strings1.get(1).indexOf(":")+1));
+                if(rate0<rate1) winNum++;
+                else if(rate0==rate1){
+                    if(length0>=length1) winNum++;
+                }
+                else System.out.println(fileNumber);
+            }
+        }
+        System.out.println(winNum);
+        System.out.println("sum:"+sum);
+    }
+
+    public static void writeOriginalResult() throws IOException {
+        String command = "d: && cd D:\\1\\WeChat\\WechatDocuments\\WeChat Files\\QQ1115063309\\FileStorage\\File\\2021-11\\C5RouteTest " +
+                "&& conversion.exe D:/Chrome下载/sample/16ModuleCase/"+fileNumber+" D:/Chrome下载/sample/16ModuleCase/"+fileNumber+"/Module.txt D:/Chrome下载/sample/16ModuleCase/"+fileNumber+"/connect_1.txt " +
+                "&& LineSearch.exe D:/Chrome下载/sample/16ModuleCase/"+fileNumber+" D:/Chrome下载/sample/16ModuleCase/"+fileNumber;
+        cmd(command);
+//            File source = new File("D:\\1\\WeChat\\WechatDocuments\\WeChat Files\\QQ1115063309\\FileStorage\\File\\2021-11\\C5RouteTest\\io\\judge.txt");
+//            File dest = new File("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\score0.txt");
+//            if(!dest.exists())dest.createNewFile();
+//            copyFileUsingFileChannels(source,dest);
+    }
+    public static void writeEventualScore() throws IOException {
+        String command = "d: && cd D:\\1\\WeChat\\WechatDocuments\\WeChat Files\\QQ1115063309\\FileStorage\\File\\2021-11\\C5RouteTest " +
+                "&& conversion.exe D:/Chrome下载/sample/16ModuleCase/"+fileNumber+" D:/Chrome下载/sample/16ModuleCase/"+fileNumber+"/ModuleResult.txt D:/Chrome下载/sample/16ModuleCase/"+fileNumber+"/connect_1.txt " +
+                "&& LineSearch.exe D:/Chrome下载/sample/16ModuleCase/"+fileNumber+" D:/Chrome下载/sample/16ModuleCase/"+fileNumber;
+        cmd(command);
+//            File source = new File("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber + "\\judge.txt");
+//            File dest = new File("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber + "\\score1.txt");
+//            if (!dest.exists()) dest.createNewFile();
+//            copyFileUsingFileChannels(source, dest);
+//        }
+    }
+
+    public static boolean cmd(String command){
+        boolean flag = false;
+        try{
+//            while (!flag) {
+                Runtime.getRuntime().exec("cmd.exe /c " + command);
+                flag = true;
+//            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return flag;
+    }
+    private static void copyFileUsingFileChannels(File source, File dest) throws IOException {
+        FileChannel inputChannel = null;
+        FileChannel outputChannel = null;
+        try {
+            inputChannel = new FileInputStream(source).getChannel();
+            outputChannel = new FileOutputStream(dest).getChannel();
+            outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+        } finally {
+            inputChannel.close();
+            outputChannel.close();
+        }
     }
 
     private static int getRandomNumberInRange(int min, int max) { //含min和max
@@ -60,8 +157,10 @@ public class ParticleTest {
     }
 
     public static void TestMyself(){
-        p[13].Move(270,435);
-        judgeOutOfBounds(p[13]);
+        String command = "d: && cd D:\\1\\WeChat\\WechatDocuments\\WeChat Files\\QQ1115063309\\FileStorage\\File\\2021-11\\C5RouteTest " +
+                "&& conversion.exe io D:/Chrome下载/sample/16ModuleCase/"+fileNumber+"/Module.txt D:/Chrome下载/sample/16ModuleCase/"+fileNumber+"/connect_1.txt " +
+                "&& LineSearch.exe io io";
+        cmd(command);
     }
 
     public static void qLearning(int maxN){    //0-11: stay 上下左右 90 180 270 MX MY MXR90 MYR90
@@ -71,18 +170,29 @@ public class ParticleTest {
             for(int i=0;i<ModuleNum;i++) p[i].Move2(400,400);
             for(int j=0;j<200;j++){
                 int []randArr=randomCommon(ModuleNum,ModuleNum);
+//                if(j==100) {
+//                    shellWidth=17.5;
+//                    for(int i=0;i<ModuleNum;i++) p[i].resetOutShell();
+//                }
                 for (int i : randArr) {  //可改为随机扰动
+                    boolean []isInclined=new boolean[12];
                     double StepLength=100*Math.random();
-                    if(j<=100)
-                        StepLength=100*Math.random();
-                    else StepLength=300*Math.random();
                     if (Math.random() < epsilon&&j<30) {
                         int tempStep = getRandomNumberInRange(0, 11);
                         if (tempStep >= 1 && tempStep <= 4) {
-                            if (tempStep == 4) p[i].Move(StepLength, 0);
-                            else if (tempStep == 3) p[i].Move(-StepLength, 0);
-                            else if (tempStep == 2) p[i].Move(0, -StepLength);
-                            else p[i].Move(0, StepLength);
+                            if(Math.random()<0.5) {
+                                if (tempStep == 4) p[i].Move(StepLength, 0);
+                                else if (tempStep == 3) p[i].Move(-StepLength, 0);
+                                else if (tempStep == 2) p[i].Move(0, -StepLength);
+                                else p[i].Move(0, StepLength);
+                            }
+                            else {
+                                isInclined[tempStep]=true;
+                                if (tempStep == 4) p[i].Move(StepLength, StepLength);
+                                else if (tempStep == 3) p[i].Move(-StepLength, StepLength);
+                                else if (tempStep == 2) p[i].Move(-StepLength, -StepLength);
+                                else p[i].Move(StepLength, -StepLength);
+                            }
                         } else if (tempStep >= 5) {
                             p[i].adjustAngle(tempStep - 4);
                         }
@@ -93,15 +203,24 @@ public class ParticleTest {
                         double tempSum = Double.MAX_VALUE;
                         double bestStepLength=StepLength;
                         for (int tempStep = 0; tempStep <= 11; tempStep++) {
-//                            if(j<=100)
-                                StepLength=100*Math.random();
-//                            else StepLength=700*Math.random();
+                            if(j<100)
+                                StepLength=150*Math.random();
+                            else StepLength=900*Math.random();
                             Particle tempParticle = SerializationUtils.clone(p[i]);
                             if (tempStep >= 1 && tempStep <= 4) {
-                                if (tempStep == 4) tempParticle.Move(StepLength, 0);
-                                else if (tempStep == 3) tempParticle.Move(-StepLength, 0);
-                                else if (tempStep == 2) tempParticle.Move(0, -StepLength);
-                                else tempParticle.Move(0, StepLength);
+                                if(Math.random()<0.5) {
+                                    if (tempStep == 4) tempParticle.Move(StepLength, 0);
+                                    else if (tempStep == 3) tempParticle.Move(-StepLength, 0);
+                                    else if (tempStep == 2) tempParticle.Move(0, -StepLength);
+                                    else tempParticle.Move(0, StepLength);
+                                }
+                                else {
+                                    isInclined[tempStep]=true;
+                                    if (tempStep == 4) tempParticle.Move(StepLength, StepLength);
+                                    else if (tempStep == 3) tempParticle.Move(-StepLength, StepLength);
+                                    else if (tempStep == 2) tempParticle.Move(-StepLength, -StepLength);
+                                    else tempParticle.Move(StepLength, -StepLength);
+                                }
                             } else if (tempStep >= 5) {
                                 tempParticle.adjustAngle(tempStep - 4);
                             }
@@ -113,7 +232,7 @@ public class ParticleTest {
                                 if(k==i) continue;
                                 tempOverlap += calOverlap(tempParticle, p[k]);
                             }
-                            for (ArrayList<Ports> ports : LinkSET) {
+                            for (ArrayList<Ports> ports : LinkSET) {            //LinkSet可优化，不必每次读取
                                 for (int tempJ = 0; tempJ < ports.size(); tempJ++) {
                                     if (p[i].portsArrayList.contains(ports.get(tempJ))) {
                                         for (int tempI = 0; tempI < ports.size(); tempI++) {
@@ -130,10 +249,18 @@ public class ParticleTest {
                             }
                         }
                         if (bestStep >= 1 && bestStep <= 4) {
-                            if (bestStep == 4) p[i].Move(bestStepLength, 0);   //StepLength's Problem
-                            else if (bestStep == 3) p[i].Move(-bestStepLength, 0);
-                            else if (bestStep == 2) p[i].Move(0, -bestStepLength);
-                            else p[i].Move(0, bestStepLength);
+                            if(!isInclined[bestStep]) {
+                                if (bestStep == 4) p[i].Move(bestStepLength, 0);   //StepLength's Problem
+                                else if (bestStep == 3) p[i].Move(-bestStepLength, 0);
+                                else if (bestStep == 2) p[i].Move(0, -bestStepLength);
+                                else p[i].Move(0, bestStepLength);
+                            }
+                            else {
+                                if (bestStep == 4) p[i].Move(bestStepLength, bestStepLength);   //StepLength's Problem
+                                else if (bestStep == 3) p[i].Move(-bestStepLength, bestStepLength);
+                                else if (bestStep == 2) p[i].Move(-bestStepLength, -bestStepLength);
+                                else p[i].Move(bestStepLength, -bestStepLength);
+                            }
                         } else if (bestStep >= 5) {
                             p[i].adjustAngle(bestStep - 4);
                         }
@@ -143,17 +270,17 @@ public class ParticleTest {
                 System.out.println(j);
             }
 
-            shellWidth=12.5;
-            for(int i=0;i<ModuleNum;i++) p[i].resetOutShell();
+//            shellWidth=20;
+//            for(int i=0;i<ModuleNum;i++) p[i].resetOutShell();
 
             for(int j=0;j<10;j++){
                 int []randArr=randomCommon(ModuleNum,ModuleNum);
                 for (int i : randArr) {  //可改为随机扰动
                     int bestStep = 0,bestAngle=0;
-                    double StepLength=1000*Math.random();
+                    double StepLength=100*Math.random();
                     double bestStepLength=StepLength;
 //                    if(j<=50)
-                        StepLength=100*Math.random();
+                        StepLength=600*Math.random();
 //                    else StepLength=300*Math.random();
                     if (Math.random() < epsilon) {
                         int tempStep = getRandomNumberInRange(0, 11);
@@ -174,14 +301,14 @@ public class ParticleTest {
                         for (int tempStep = 0; tempStep <= 4; tempStep++) {
                             for (int angle = 0; angle <= 7; angle++) {
 //                                if (j <= 50)
-                                    StepLength = 100 * Math.random();
+                                    StepLength = 300 * Math.random();
 //                                else StepLength = 700 * Math.random();
                                 Particle tempParticle = SerializationUtils.clone(p[i]);
                                 if (tempStep >= 1) {
-                                    if (tempStep == 4) tempParticle.Move(StepLength, 0);
-                                    else if (tempStep == 3) tempParticle.Move(-StepLength, 0);
-                                    else if (tempStep == 2) tempParticle.Move(0, -StepLength);
-                                    else tempParticle.Move(0, StepLength);
+                                    if (tempStep == 4) tempParticle.Move(StepLength, StepLength);
+                                    else if (tempStep == 3) tempParticle.Move(-StepLength, StepLength);
+                                    else if (tempStep == 2) tempParticle.Move(-StepLength, -StepLength);
+                                    else tempParticle.Move(StepLength, -StepLength);
                                     judgeOutOfBounds(tempParticle);
                                 }
                                 tempParticle.adjustAngle(angle);
@@ -203,6 +330,10 @@ public class ParticleTest {
                                         }
                                     }
                                 }
+//                                for(int k=0;k<ModuleNum;k++){
+//                                    if(k==i) continue;
+//                                    tempDis+=getDist(tempParticle.getCenterPoint(),p[k].getCenterPoint());
+//                                }
                                 if (tempDis * disRate + tempOverlap * overlapRate < tempSum) {
                                     bestStep = tempStep;
                                     bestAngle=angle;
@@ -212,10 +343,10 @@ public class ParticleTest {
                             }
                         }
                         if (bestStep >= 1) {
-                            if (bestStep == 4) p[i].Move(bestStepLength, 0);   //StepLength's Problem
-                            else if (bestStep == 3) p[i].Move(-bestStepLength, 0);
-                            else if (bestStep == 2) p[i].Move(0, -bestStepLength);
-                            else p[i].Move(0, bestStepLength);
+                            if (bestStep == 4) p[i].Move(bestStepLength, bestStepLength);   //StepLength's Problem
+                            else if (bestStep == 3) p[i].Move(-bestStepLength, bestStepLength);
+                            else if (bestStep == 2) p[i].Move(-bestStepLength, -bestStepLength);
+                            else p[i].Move(bestStepLength, -bestStepLength);
                             judgeOutOfBounds(p[i]);
                         }
                         p[i].adjustAngle(bestAngle);
@@ -265,15 +396,15 @@ public class ParticleTest {
 
     public static void judgeOutOfBounds(Particle par){
         double vx = 0, vy = 0;  //出界判断
-        if (par.getMaxX() > AreaBoundary[2].getX()-shellWidth) {
-            vx = AreaBoundary[2].getX() - par.getMaxX()-shellWidth;
-        } else if (par.getMinX() < AreaBoundary[0].getX()+shellWidth) {
-            vx = AreaBoundary[0].getX() - par.getMinX()+shellWidth;
+        if (par.getMaxX() > AreaBoundary[2].getX()-15) {
+            vx = AreaBoundary[2].getX() - par.getMaxX()-15;
+        } else if (par.getMinX() < AreaBoundary[0].getX()+15) {
+            vx = AreaBoundary[0].getX() - par.getMinX()+15;
         }
-        if (par.getMaxY() > AreaBoundary[2].getY()-shellWidth) {
-            vy = AreaBoundary[2].getY() - par.getMaxY()-shellWidth;
-        } else if (par.getMinY() < AreaBoundary[0].getY()+shellWidth) {
-            vy = AreaBoundary[0].getY() - par.getMinY()+shellWidth;
+        if (par.getMaxY() > AreaBoundary[2].getY()-15) {
+            vy = AreaBoundary[2].getY() - par.getMaxY()-15;
+        } else if (par.getMinY() < AreaBoundary[0].getY()+15) {
+            vy = AreaBoundary[0].getY() - par.getMinY()+15;
         }
         par.Move(vx, vy);
     }
@@ -439,13 +570,6 @@ public class ParticleTest {
         return Math.abs(SPIA(myPoint1,myPoint2,p1.getPointNum(),p2.getPointNum()));
     }
 
-    private static final Pattern pattern = Pattern.compile("-?[0-9]+(.[0-9]+)?");
-    private static boolean isNumber(String str) {
-        // 通过Matcher进行字符串匹配
-        Matcher m = pattern.matcher(str);
-        // 如果正则匹配通过 m.matches() 方法返回 true ，反之 false
-        return m.matches();
-    }
 
 
     public static java.util.List<String> Transition(){
@@ -476,7 +600,7 @@ public class ParticleTest {
     public static void OutPutResultTxtFile(List<String> list){
         try {
             String content = "测试使用字符串";
-            File file = new File("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\result.txt");
+            File file = new File("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\ModuleResult.txt");
             //文件不存在时候，主动创建文件。
             if(!file.exists()){
                 file.createNewFile();
@@ -494,20 +618,21 @@ public class ParticleTest {
         }
     }
 
-    public static void ReadConnectFile(){
-        List<String> list=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\connect_1.txt");
-        for(int line=0;line<list.size();line++){
-            String temp=list.get(line);
+    public static void ReadConnectFile() {
+        List<String> list = readFile("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber + "\\connect_1.txt");
+        if (list.isEmpty()) return;
+        for (int line = 0; line < list.size(); line++) {
+            String temp = list.get(line);
             System.out.println(temp);
-            if(temp.matches("Link(.*)")){
-                temp=list.get(++line);
-                String[] ModuleList=temp.split(" ");
-                String[] PortList=list.get(++line).split(" ");
-                ArrayList<Ports> linkArr=new ArrayList<Ports>();
-                for(int i=0;i<ModuleList.length;i++){
-                    int ModuleN=Integer.parseInt(ModuleList[i].substring(ModuleList[i].indexOf("M")+1));
-                    int PortN=Integer.parseInt(PortList[i]);
-                    linkArr.add(p[ModuleN-1].portsArrayList.get(PortN-1));
+            if (temp.matches("Link(.*)")) {
+                temp = list.get(++line);
+                String[] ModuleList = temp.split(" ");
+                String[] PortList = list.get(++line).split(" ");
+                ArrayList<Ports> linkArr = new ArrayList<Ports>();
+                for (int i = 0; i < ModuleList.length; i++) {
+                    int ModuleN = Integer.parseInt(ModuleList[i].substring(ModuleList[i].indexOf("M") + 1));
+                    int PortN = Integer.parseInt(PortList[i]);
+                    linkArr.add(p[ModuleN - 1].portsArrayList.get(PortN - 1));
                 }
                 LinkSET.add(linkArr);
             }
@@ -515,72 +640,81 @@ public class ParticleTest {
     }
 
     public static void ReadAndInit(){
-        List<String> list=readFile("D:\\Chrome下载\\sample\\16ModuleCase\\"+fileNumber+"\\Module.txt");
-        for(int i=0;i<list.size();i++)
-        {
-            String temp=list.get(i);
-            System.out.println(temp);
-            if(temp.matches("Area:(.*)")){
-                String[] templist=temp.replace("Area:","").trim().split("\\(");
-                int j=0;
-                for(String str:templist){
-                    if(str.equals("")) continue;
-                    str=str.replace(")","");
-                    double tempX=Double.parseDouble(str.substring(0,str.indexOf(",")));
-                    double tempY=Double.parseDouble(str.substring(str.indexOf(" ")+1));
-                    AreaBoundary[j]=new MyPoint(tempX,tempY);
-                    j++;
-                }
-            }
-            if(temp.matches("Module:(.*)")){
-                int ModuleX=Integer.parseInt(temp.substring(temp.indexOf(":M")+2));
-                String strName=temp.substring(temp.indexOf(":")+1);
-                temp=list.get(++i);
-                String[] tempList=temp.replace("Boundary:","").trim().split("\\(");
-                ArrayList<Double> x=new ArrayList<>(),y=new ArrayList<>();
-                String ruleNa = null;
-                for(String str:tempList){
-                    if(str.equals("")) continue;
-                    if(str.contains(");")) {
-                        ruleNa=str.substring(str.indexOf(";")+1);
-                        str = str.substring(0, str.indexOf(")"));
+        try {
+            List<String> list = readFile("D:\\Chrome下载\\sample\\16ModuleCase\\" + fileNumber + "\\Module.txt");
+            if(list.isEmpty()) return;
+            for (int i = 0; i < list.size(); i++) {
+                String temp = list.get(i);
+                System.out.println(temp);
+                if (temp.matches("Area:(.*)")) {
+                    String[] templist = temp.replace("Area:", "").trim().split("\\(");
+                    int j = 0;
+                    for (String str : templist) {
+                        if (str.equals("")) continue;
+                        str = str.replace(")", "");
+                        double tempX = Double.parseDouble(str.substring(0, str.indexOf(",")));
+                        double tempY = Double.parseDouble(str.substring(str.indexOf(" ") + 1));
+                        AreaBoundary[j] = new MyPoint(tempX, tempY);
+                        j++;
                     }
-                    str=str.replace(")","");
-                    double tempX=Double.parseDouble(str.substring(0,str.indexOf(",")));
-                    double tempY=Double.parseDouble(str.substring(str.indexOf(" ")+1));
-                    x.add(tempX);y.add(tempY);
                 }
-                double []x0=new double[x.size()],y0=new double[y.size()];
-                for(int j=0;j<x.size();j++){
-                    x0[j]=x.get(j);y0[j]=y.get(j);
-                }
-                p[ModuleX-1]=new Particle(strName,x.size(),x0,y0,ruleNa);
-
-                while (list.get(i+1).contains("Port:")) {
-
+                if (temp.matches("Module:(.*)")) {
+                    int ModuleX = Integer.parseInt(temp.substring(temp.indexOf(":M") + 2));
+                    String strName = temp.substring(temp.indexOf(":") + 1);
                     temp = list.get(++i);
-                    tempList=temp.replace("Port:","").trim().split("\\(");
-                    x.clear();y.clear();
-                    for(String str:tempList){
-                        if(str.equals("")) continue;
-                        if(str.contains(");")) {
-                            ruleNa=str.substring(str.indexOf(";")+1);
+                    String[] tempList = temp.replace("Boundary:", "").trim().split("\\(");
+                    ArrayList<Double> x = new ArrayList<>(), y = new ArrayList<>();
+                    String ruleNa = null;
+                    for (String str : tempList) {
+                        if (str.equals("")) continue;
+                        if (str.contains(");")) {
+                            ruleNa = str.substring(str.indexOf(";") + 1);
                             str = str.substring(0, str.indexOf(")"));
                         }
-                        str=str.replace(")","");
-                        double tempX=Double.parseDouble(str.substring(0,str.indexOf(",")));
-                        double tempY=Double.parseDouble(str.substring(str.indexOf(" ")+1));
-                        x.add(tempX);y.add(tempY);
+                        str = str.replace(")", "");
+                        double tempX = Double.parseDouble(str.substring(0, str.indexOf(",")));
+                        double tempY = Double.parseDouble(str.substring(str.indexOf(" ") + 1));
+                        x.add(tempX);
+                        y.add(tempY);
                     }
-                    double []x1=new double[x.size()],y1=new double[y.size()];
-                    for(int j=0;j<x.size();j++){
-                        x1[j]=x.get(j);y1[j]=y.get(j);
+                    double[] x0 = new double[x.size()], y0 = new double[y.size()];
+                    for (int j = 0; j < x.size(); j++) {
+                        x0[j] = x.get(j);
+                        y0[j] = y.get(j);
                     }
-                    Ports tempPort=new Ports(x.size(),x1,y1,ruleNa);
-                    p[ModuleX-1].portsArrayList.add(tempPort);
-                    if(i+1==list.size()) break;
+                    p[ModuleX - 1] = new Particle(strName, x.size(), x0, y0, ruleNa);
+
+                    while (list.get(i + 1).contains("Port:")) {
+
+                        temp = list.get(++i);
+                        tempList = temp.replace("Port:", "").trim().split("\\(");
+                        x.clear();
+                        y.clear();
+                        for (String str : tempList) {
+                            if (str.equals("")) continue;
+                            if (str.contains(");")) {
+                                ruleNa = str.substring(str.indexOf(";") + 1);
+                                str = str.substring(0, str.indexOf(")"));
+                            }
+                            str = str.replace(")", "");
+                            double tempX = Double.parseDouble(str.substring(0, str.indexOf(",")));
+                            double tempY = Double.parseDouble(str.substring(str.indexOf(" ") + 1));
+                            x.add(tempX);
+                            y.add(tempY);
+                        }
+                        double[] x1 = new double[x.size()], y1 = new double[y.size()];
+                        for (int j = 0; j < x.size(); j++) {
+                            x1[j] = x.get(j);
+                            y1[j] = y.get(j);
+                        }
+                        Ports tempPort = new Ports(x.size(), x1, y1, ruleNa);
+                        p[ModuleX - 1].portsArrayList.add(tempPort);
+                        if (i + 1 == list.size()) break;
+                    }
                 }
             }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
         }
     }
 
@@ -719,7 +853,7 @@ public class ParticleTest {
         jpanelTest.setBackground(Color.BLACK);
         jpanelTest.setBounds(0, 0, 1000, 1000);
         jpanelTest.setPreferredSize(new Dimension(2000, 2000));
-        JFrame frame = new JFrame("PSO");
+        JFrame frame = new JFrame(fileNumber);
         JScrollPane jScrollPane = new JScrollPane(jpanelTest);
         jScrollPane.setBounds(100, 100, 350, 450);
         jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
