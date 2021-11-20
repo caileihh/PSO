@@ -1,5 +1,4 @@
-package Particle;
-
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -13,26 +12,39 @@ public class Particle implements Cloneable, Serializable {
     private String name;
     private String ruleName;
     public CenterPoint centerPoint = new CenterPoint(getCenterX(), getCenterY());
-    ArrayList<Ports> portsArrayList = new ArrayList<Ports>();
+    ArrayList<Ports> portsArrayList = new ArrayList<>();
     private double sumF = 0;
 
-//    @Override
-//    public Particle clone() throws CloneNotSupportedException {
-//        Particle p=new Particle();
-//        p.name=this.name;
-//        p.pointNum=this.pointNum;
-//        p.x=this.x;
-//        p.y=this.y;
-//        p.maxX=this.maxX;p.maxY=this.maxY;p.minX=this.minX;p.minY=this.minY;
-//        if(this.portsArrayList!=null) p.portsArrayList=new ArrayList<Ports>(this.portsArrayList);
-//        p.sumF=this.sumF;
-//        p.centerPoint=this.centerPoint.clone();
-//        return p;
-//    }
+    @Override
+    public Particle clone() throws CloneNotSupportedException {
+        Particle p = new Particle();
+        p.name = this.name;
+        p.pointNum = this.pointNum;
+        p.x = this.x.clone();
+        p.y = this.y.clone();
+        p.maxX = this.maxX;
+        p.maxY = this.maxY;
+        p.minX = this.minX;
+        p.minY = this.minY;
+        p.shellX = this.shellX.clone();
+        p.shellY = this.shellY.clone();
+//        if (this.portsArrayList != null) p.portsArrayList = new ArrayList<>(this.portsArrayList);
+//        p.portsArrayList = (ArrayList<Ports>) this.portsArrayList.clone();
+//        p.portsArrayList = new ArrayList<Ports>();
+        for (Ports pp : this.portsArrayList) {
+            p.portsArrayList.add(pp.clone());
+        }
+        p.sumF = this.sumF;
+        p.centerPoint = this.centerPoint.clone();
+        return p;
+    }
 
     public Particle() {
     }
 
+    public CenterPoint getCenterPoint() {
+        return centerPoint;
+    }
 
     public double getShellX(int i) {
         while (i >= pointNum) i -= pointNum;
@@ -83,7 +95,7 @@ public class Particle implements Cloneable, Serializable {
     }
 
     public void adjustAngle(int angleFlag) {  //可优化   //逆时针为正方向
-        if(angleFlag==0) return;
+        if (angleFlag == 0) return;
         double x0 = getCenterX(), y0 = getCenterY();
         double centreX = 0, centreY = 0;
         this.maxX = Double.MIN_VALUE;
@@ -267,11 +279,11 @@ public class Particle implements Cloneable, Serializable {
         resetOutShell();
     }
 
-    public Particle(String name, int pointNum, double[] x, double[] y,String ruleName) {
+    public Particle(String name, int pointNum, double[] x, double[] y, String ruleName) {
         this.x = x;
         this.y = y;
         this.name = name;
-        this.ruleName=ruleName;
+        this.ruleName = ruleName;
         this.pointNum = pointNum;
         this.shellX = new double[pointNum];
         this.shellY = new double[pointNum];
@@ -438,7 +450,10 @@ class CenterPoint implements Cloneable, Serializable {
 
     @Override
     public CenterPoint clone() throws CloneNotSupportedException {
-        return (CenterPoint) super.clone();
+        CenterPoint p = (CenterPoint) super.clone();
+        p.x = this.x;
+        p.y = this.y;
+        return p;
     }
 
     public CenterPoint(double x, double y) {
