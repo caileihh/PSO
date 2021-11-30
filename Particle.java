@@ -1,14 +1,15 @@
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Particle implements Cloneable, Serializable {
     private int pointNum, portN;
-    private double[] x;
-    private double[] y;
+    private double[] x,yuanX;
+    private double[] y,yuanY;
     private double[] shellX, shellY;
     private double maxX, maxY, minX, minY;
-
+    public String Orient="R0";
     private String name;
     private String ruleName;
     public CenterPoint centerPoint = new CenterPoint(getCenterX(), getCenterY());
@@ -18,10 +19,10 @@ public class Particle implements Cloneable, Serializable {
     @Override
     public Particle clone() throws CloneNotSupportedException {
         Particle p = new Particle();
-        p.name = this.name;
+        p.name = this.name; p.ruleName=this.ruleName;
         p.pointNum = this.pointNum;
-        p.x = this.x.clone();
-        p.y = this.y.clone();
+        p.x = this.x.clone(); p.yuanX=this.x.clone();
+        p.y = this.y.clone(); p.yuanY=this.y.clone();
         p.maxX = this.maxX;
         p.maxY = this.maxY;
         p.minX = this.minX;
@@ -94,123 +95,275 @@ public class Particle implements Cloneable, Serializable {
         return sum;
     }
 
+//    public void adjustAngle(int angleFlag) {  //可优化   //逆时针为正方向
+//        if (angleFlag == 0) return;
+//        double x0 = getCenterX(), y0 = getCenterY();
+//        double centreX = 0, centreY = 0;
+//        this.maxX = Double.MIN_VALUE;
+//        this.minX = Double.MAX_VALUE;
+//        this.maxY = Double.MIN_VALUE;
+//        this.minY = Double.MAX_VALUE;
+//        if (angleFlag == 1) {
+//            for (int i = 0; i < pointNum; i++) {
+//                double x1 = this.x[i], y1 = this.y[i];
+//                this.x[i] = y0 - y1 + x0;
+//                this.shellX[i] = y0 - y1 + x0;
+//                this.y[i] = x1 - x0 + y0;
+//                this.shellY[i] = x1 - x0 + y0;
+//                centreX += this.x[i];
+//                centreY += this.y[i];
+//
+//                if (x[i] > this.maxX) this.maxX = x[i];
+//                else if (x[i] < this.minX) this.minX = x[i];
+//                if (y[i] > this.maxY) this.maxY = y[i];
+//                else if (y[i] < this.minY) this.minY = y[i];
+//            }
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum); //中心应该不会变化
+//        } else if (angleFlag == 2) {
+//            for (int i = 0; i < pointNum; i++) {
+//                double x1 = this.x[i], y1 = this.y[i];
+//                this.x[i] = x0 - x1 + x0;
+//                this.shellX[i] = x0 - x1 + x0;
+//                this.y[i] = y0 - y1 + y0;
+//                this.shellY[i] = y0 - y1 + y0;
+//                centreX += this.x[i];
+//                centreY += this.y[i];
+//                if (x[i] > this.maxX) this.maxX = x[i];
+//                else if (x[i] < this.minX) this.minX = x[i];
+//                if (y[i] > this.maxY) this.maxY = y[i];
+//                else if (y[i] < this.minY) this.minY = y[i];
+//            }
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+//        } else if (angleFlag == 3) {
+//            for (int i = 0; i < pointNum; i++) {
+//                double x1 = this.x[i], y1 = this.y[i];
+//                this.x[i] = y1 - y0 + x0;
+//                this.shellX[i] = y1 - y0 + x0;
+//                this.y[i] = x0 - x1 + y0;
+//                this.shellY[i] = x0 - x1 + y0;
+//                centreX += this.x[i];
+//                centreY += this.y[i];
+//                if (x[i] > this.maxX) this.maxX = x[i];
+//                else if (x[i] < this.minX) this.minX = x[i];
+//                if (y[i] > this.maxY) this.maxY = y[i];
+//                else if (y[i] < this.minY) this.minY = y[i];
+//            }
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+//        } else if (angleFlag == 4) {
+//            for (int i = 0; i < pointNum; i++) {
+//                double x1 = this.x[i], y1 = this.y[i];
+//                this.x[i] = x0 - x1 + x0;
+//                this.shellX[i] = x0 - x1 + x0;
+//                this.y[i] = y1 - y0 + y0;
+//                this.shellY[i] = y1 - y0 + y0;
+//                centreX += this.x[i];
+//                centreY += this.y[i];
+//                if (x[i] > this.maxX) this.maxX = x[i];
+//                else if (x[i] < this.minX) this.minX = x[i];
+//                if (y[i] > this.maxY) this.maxY = y[i];
+//                else if (y[i] < this.minY) this.minY = y[i];
+//            }
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+//        } else if (angleFlag == 5) {
+//            for (int i = 0; i < pointNum; i++) {
+//                double x1 = this.x[i], y1 = this.y[i];
+//                this.x[i] = x1 - x0 + x0;
+//                this.shellX[i] = x1 - x0 + x0;
+//                this.y[i] = y0 - y1 + y0;
+//                this.shellY[i] = y0 - y1 + y0;
+//                centreX += this.x[i];
+//                centreY += this.y[i];
+//                if (x[i] > this.maxX) this.maxX = x[i];
+//                else if (x[i] < this.minX) this.minX = x[i];
+//                if (y[i] > this.maxY) this.maxY = y[i];
+//                else if (y[i] < this.minY) this.minY = y[i];
+//            }
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+//        } else if (angleFlag == 6) {
+//            for (int i = 0; i < pointNum; i++) {
+//                double x1 = this.x[i], y1 = this.y[i];
+//                this.x[i] = y0 - y1 + x0;
+//                this.shellX[i] = y0 - y1 + x0;
+//                this.y[i] = x0 - x1 + y0;
+//                this.shellY[i] = x0 - x1 + y0;
+//                centreX += this.x[i];
+//                centreY += this.y[i];
+//                if (x[i] > this.maxX) this.maxX = x[i];
+//                else if (x[i] < this.minX) this.minX = x[i];
+//                if (y[i] > this.maxY) this.maxY = y[i];
+//                else if (y[i] < this.minY) this.minY = y[i];
+//            }
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+//        } else if (angleFlag == 7) {
+//            for (int i = 0; i < pointNum; i++) {
+//                double x1 = this.x[i], y1 = this.y[i];
+//                this.x[i] = y1 - y0 + x0;
+//                this.shellX[i] = y1 - y0 + x0;
+//                this.y[i] = x1 - x0 + y0;
+//                this.shellY[i] = x1 - x0 + y0;
+//                centreX += this.x[i];
+//                centreY += this.y[i];
+//                if (x[i] > this.maxX) this.maxX = x[i];
+//                else if (x[i] < this.minX) this.minX = x[i];
+//                if (y[i] > this.maxY) this.maxY = y[i];
+//                else if (y[i] < this.minY) this.minY = y[i];
+//            }
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+//        }
+//        for (Ports ports : portsArrayList) {
+//            ports.adjustAngle(this.centerPoint, angleFlag);
+//        }
+//        resetOutShell();
+//    }
+
     public void adjustAngle(int angleFlag) {  //可优化   //逆时针为正方向
-        if (angleFlag == 0) return;
+//        if (angleFlag == 0) return;
         double x0 = getCenterX(), y0 = getCenterY();
-        double centreX = 0, centreY = 0;
-        this.maxX = Double.MIN_VALUE;
-        this.minX = Double.MAX_VALUE;
-        this.maxY = Double.MIN_VALUE;
-        this.minY = Double.MAX_VALUE;
-        if (angleFlag == 1) {
+        switch (this.Orient) {
+            case "R90":
+                for (int i = 0; i < pointNum; i++) {
+                    double x1 = this.x[i], y1 = this.y[i];
+                    this.yuanX[i] = y1 + x0 - y0;
+                    this.yuanY[i] = x0 - x1 + y0;
+                }
+                break;
+            case "R0":
+                this.yuanX = this.x.clone();
+                this.yuanY = this.y.clone();
+                break;
+            case "R180":
+                for (int i = 0; i < pointNum; i++) {
+                    double x1 = this.x[i], y1 = this.y[i];
+                    this.yuanX[i] = x0 * 2 - x1;
+                    this.yuanY[i] = y0 * 2 - y1;
+                }
+                break;
+            case "R270":
+                for (int i = 0; i < pointNum; i++) {
+                    double x1 = this.x[i], y1 = this.y[i];
+                    this.yuanX[i] = x0 + y0 - y1;
+                    this.yuanY[i] = x1 + y0 - x0;
+                }
+                break;
+            case "MX":
+                for (int i = 0; i < pointNum; i++) {
+                    double x1 = this.x[i], y1 = this.y[i];
+                    this.yuanX[i] = x0 * 2 - x1;
+                    this.yuanY[i] =  y1;
+                }
+                break;
+            case "MY":
+                for (int i = 0; i < pointNum; i++) {
+                    double x1 = this.x[i], y1 = this.y[i];
+                    this.yuanX[i] = x1;
+                    this.yuanY[i] = y0 * 2 - y1;
+                }
+                break;
+            case "MXR90":
+                for (int i = 0; i < pointNum; i++) {
+                    double x1 = this.x[i], y1 = this.y[i];
+                    this.yuanX[i] = x0 + y0 - y1;
+                    this.yuanY[i] = x0 + y0 - x1;
+                }
+                break;
+            case "MYR90":
+                for (int i = 0; i < pointNum; i++) {
+                    double x1 = this.x[i], y1 = this.y[i];
+                    this.yuanX[i] = y1 + x0 - y0;
+                    this.yuanY[i] = x1 + y0 - x0;
+                }
+                break;
+        }
+        String yuanOrient=this.Orient;
+        if (angleFlag==0){
+            this.x=this.yuanX.clone();
+            this.y=this.yuanY.clone();
+            resetBoundary();
+            this.Orient="R0";
+        }
+        else if (angleFlag == 1) {
             for (int i = 0; i < pointNum; i++) {
-                double x1 = this.x[i], y1 = this.y[i];
+                double x1 = this.yuanX[i], y1 = this.yuanY[i];
                 this.x[i] = y0 - y1 + x0;
                 this.shellX[i] = y0 - y1 + x0;
                 this.y[i] = x1 - x0 + y0;
                 this.shellY[i] = x1 - x0 + y0;
-                centreX += this.x[i];
-                centreY += this.y[i];
 
-                if (x[i] > this.maxX) this.maxX = x[i];
-                else if (x[i] < this.minX) this.minX = x[i];
-                if (y[i] > this.maxY) this.maxY = y[i];
-                else if (y[i] < this.minY) this.minY = y[i];
+
             }
-            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum); //中心应该不会变化
+            this.Orient="R90";
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum); //中心应该不会变化
         } else if (angleFlag == 2) {
             for (int i = 0; i < pointNum; i++) {
-                double x1 = this.x[i], y1 = this.y[i];
+                double x1 = this.yuanX[i], y1 = this.yuanY[i];
                 this.x[i] = x0 - x1 + x0;
                 this.shellX[i] = x0 - x1 + x0;
                 this.y[i] = y0 - y1 + y0;
                 this.shellY[i] = y0 - y1 + y0;
-                centreX += this.x[i];
-                centreY += this.y[i];
-                if (x[i] > this.maxX) this.maxX = x[i];
-                else if (x[i] < this.minX) this.minX = x[i];
-                if (y[i] > this.maxY) this.maxY = y[i];
-                else if (y[i] < this.minY) this.minY = y[i];
+
             }
-            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+            this.Orient="R180";
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
         } else if (angleFlag == 3) {
             for (int i = 0; i < pointNum; i++) {
-                double x1 = this.x[i], y1 = this.y[i];
+                double x1 = this.yuanX[i], y1 = this.yuanY[i];
                 this.x[i] = y1 - y0 + x0;
                 this.shellX[i] = y1 - y0 + x0;
                 this.y[i] = x0 - x1 + y0;
                 this.shellY[i] = x0 - x1 + y0;
-                centreX += this.x[i];
-                centreY += this.y[i];
-                if (x[i] > this.maxX) this.maxX = x[i];
-                else if (x[i] < this.minX) this.minX = x[i];
-                if (y[i] > this.maxY) this.maxY = y[i];
-                else if (y[i] < this.minY) this.minY = y[i];
+
             }
-            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+            this.Orient="R270";
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
         } else if (angleFlag == 4) {
             for (int i = 0; i < pointNum; i++) {
-                double x1 = this.x[i], y1 = this.y[i];
+                double x1 = this.yuanX[i], y1 = this.yuanY[i];
                 this.x[i] = x0 - x1 + x0;
                 this.shellX[i] = x0 - x1 + x0;
                 this.y[i] = y1 - y0 + y0;
                 this.shellY[i] = y1 - y0 + y0;
-                centreX += this.x[i];
-                centreY += this.y[i];
-                if (x[i] > this.maxX) this.maxX = x[i];
-                else if (x[i] < this.minX) this.minX = x[i];
-                if (y[i] > this.maxY) this.maxY = y[i];
-                else if (y[i] < this.minY) this.minY = y[i];
+
             }
-            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+            this.Orient="MX";
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
         } else if (angleFlag == 5) {
             for (int i = 0; i < pointNum; i++) {
-                double x1 = this.x[i], y1 = this.y[i];
+                double x1 = this.yuanX[i], y1 = this.yuanY[i];
                 this.x[i] = x1 - x0 + x0;
                 this.shellX[i] = x1 - x0 + x0;
                 this.y[i] = y0 - y1 + y0;
                 this.shellY[i] = y0 - y1 + y0;
-                centreX += this.x[i];
-                centreY += this.y[i];
-                if (x[i] > this.maxX) this.maxX = x[i];
-                else if (x[i] < this.minX) this.minX = x[i];
-                if (y[i] > this.maxY) this.maxY = y[i];
-                else if (y[i] < this.minY) this.minY = y[i];
+
             }
-            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+            this.Orient="MY";
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
         } else if (angleFlag == 6) {
             for (int i = 0; i < pointNum; i++) {
-                double x1 = this.x[i], y1 = this.y[i];
+                double x1 = this.yuanX[i], y1 = this.yuanY[i];
                 this.x[i] = y0 - y1 + x0;
                 this.shellX[i] = y0 - y1 + x0;
                 this.y[i] = x0 - x1 + y0;
                 this.shellY[i] = x0 - x1 + y0;
-                centreX += this.x[i];
-                centreY += this.y[i];
-                if (x[i] > this.maxX) this.maxX = x[i];
-                else if (x[i] < this.minX) this.minX = x[i];
-                if (y[i] > this.maxY) this.maxY = y[i];
-                else if (y[i] < this.minY) this.minY = y[i];
+
             }
-            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+            this.Orient="MXR90";
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
         } else if (angleFlag == 7) {
             for (int i = 0; i < pointNum; i++) {
-                double x1 = this.x[i], y1 = this.y[i];
+                double x1 = this.yuanX[i], y1 = this.yuanY[i];
                 this.x[i] = y1 - y0 + x0;
                 this.shellX[i] = y1 - y0 + x0;
                 this.y[i] = x1 - x0 + y0;
                 this.shellY[i] = x1 - x0 + y0;
-                centreX += this.x[i];
-                centreY += this.y[i];
-                if (x[i] > this.maxX) this.maxX = x[i];
-                else if (x[i] < this.minX) this.minX = x[i];
-                if (y[i] > this.maxY) this.maxY = y[i];
-                else if (y[i] < this.minY) this.minY = y[i];
+
             }
-            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+            this.Orient="MYR90";
+//            this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
         }
+        resetBoundary();
+        this.centerPoint=new CenterPoint(getCenterX(),getCenterY());
         for (Ports ports : portsArrayList) {
-            ports.adjustAngle(this.centerPoint, angleFlag);
+            ports.adjustAngle(this.centerPoint, angleFlag,yuanOrient);
         }
         resetOutShell();
     }
@@ -218,20 +371,20 @@ public class Particle implements Cloneable, Serializable {
     public void Move(double x, double y) {
         double centreX = 0, centreY = 0;
         for (int i = 0; i < pointNum; i++) {
-            this.x[i] += x;
-            this.y[i] += y;
+            this.x[i] += x; this.yuanX[i]+=x;
+            this.y[i] += y; this.yuanY[i]+=y;
             this.shellX[i] += x;
             this.shellY[i] += y;
 
             centreX += this.x[i];
             centreY += this.y[i];
         }
-        maxX += x;
-        minX += x;
-        maxY += y;
-        minY += y;
+        this.maxX += x;
+        this.minX += x;
+        this.maxY += y;
+        this.minY += y;
 
-        this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+        this.centerPoint = new CenterPoint(getCenterX(), getCenterY());
         for (Ports ports : portsArrayList) {
             ports.Move(x, y);
         }
@@ -242,8 +395,8 @@ public class Particle implements Cloneable, Serializable {
         double absX = x - this.getCenterX(), absY = y - this.getCenterY();
         double centreX = 0, centreY = 0;
         for (int i = 0; i < pointNum; i++) {
-            this.x[i] += absX;
-            this.y[i] += absY;
+            this.x[i] += absX; this.yuanX[i]+=absX;
+            this.y[i] += absY; this.yuanY[i]+=absY;
             this.shellX[i] += absX;
             this.shellY[i] += absY;
 
@@ -255,7 +408,7 @@ public class Particle implements Cloneable, Serializable {
         maxY += absY;
         minY += absY;
 
-        this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
+        this.centerPoint = new CenterPoint(getCenterX(), getCenterY());
         for (Ports ports : portsArrayList) {
             ports.Move(absX, absY);
         }
@@ -282,18 +435,15 @@ public class Particle implements Cloneable, Serializable {
     public Particle(String name, int pointNum, double[] x, double[] y, String ruleName) {
         this.x = x;
         this.y = y;
+        this.yuanX=x.clone();
+        this.yuanY=y.clone();
         this.name = name;
         this.ruleName = ruleName;
         this.pointNum = pointNum;
         this.shellX = new double[pointNum];
         this.shellY = new double[pointNum];
-        double centreX = 0, centreY = 0;
-        for (int i = 0; i < pointNum; i++) {
-            centreX += x[i];
-            centreY += y[i];
-        }
-        this.centerPoint = new CenterPoint(centreX / pointNum, centreY / pointNum);
         resetBoundary();
+        this.centerPoint=new CenterPoint(getCenterX(),getCenterY());
         resetOutShell();
     }
 
@@ -385,17 +535,19 @@ public class Particle implements Cloneable, Serializable {
     }
 
     public double getCenterX() {
-        double sum = 0;
-        for (int i = 0; i < pointNum; i++)
-            sum += x[i];
-        return sum / pointNum;
+//        double sum = 0;
+//        for (int i = 0; i < pointNum; i++)
+//            sum += x[i];
+//        return sum / pointNum;
+        return (this.maxX+this.minX)/2;
     }
 
     public double getCenterY() {
-        double sum = 0;
-        for (int i = 0; i < pointNum; i++)
-            sum += y[i];
-        return sum / pointNum;
+//        double sum = 0;
+//        for (int i = 0; i < pointNum; i++)
+//            sum += y[i];
+//        return sum / pointNum;
+        return (this.maxY+this.minY)/2;
     }
 
     public String getName() {

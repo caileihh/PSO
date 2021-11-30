@@ -29,23 +29,18 @@ public class ParticleTest {
     public static MyPoint[] p1 = new MyPoint[6], p2 = new MyPoint[4];
 
     public static void main(String[] args) throws CloneNotSupportedException, IOException, NullPointerException {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Please input Module.txt Path:");
-        String moduleFilePath = scanner.nextLine();
-        System.out.println("Please input Connect.txt Path:");
-        String connectFilePath = scanner.nextLine();
-        System.out.println("Please input ModuleResult.txt Path");
-        String ResultPath = scanner.nextLine();
-        Long startTime = System.currentTimeMillis();
-        ReadAndInit(moduleFilePath);
-        ReadConnectFile(connectFilePath);
-//        ReadAndInit();
-//        ReadConnectFile();
-        Init();
-        qLearning(1);
-//        OutPutResultTxtFile(Transition());
-        OutPutResultTxtFile(Transition(moduleFilePath), ResultPath);
 
+        Long startTime = System.currentTimeMillis();
+        ReadAndInit(args[0]);
+        ReadConnectFile(args[1]);
+        Init();
+        System.out.println("testing! Please waiting few minutes");
+        do {
+            qLearning(1);
+            OutPutResultTxtFile(Transition(args[0]), args[2]);
+        }while (judgeScore());
+        WriteResult();
+        System.out.println("test done!");
 
 //        TestMyself();
 
@@ -53,9 +48,57 @@ public class ParticleTest {
         double time = ((double) (endTime - startTime)) / 1000;
         System.out.println("花费时间" + (time) + "s");
 //        Draw();
-//        double[] x = {1, 2, 3, 4};
-//        System.out.println(x);
-//        System.out.println(x.clone());
+    }
+
+    public static boolean judgeScore() throws IOException {
+        String folderPath="/home/eda210506";
+        String command1 = "./conversion.exe " + folderPath + " " + folderPath +
+                "/ModuleResult.txt" + " " + folderPath +
+                "/connect_1.txt";
+        String command2="./LineSearch.exe " + folderPath + " " + folderPath;
+        Process process1 = Runtime.getRuntime().exec(command1);
+        try { Thread.sleep ( 5000 ) ;  //注意时间
+        } catch (InterruptedException ignored){}
+        Process process2 = Runtime.getRuntime().exec(command2);
+        try { Thread.sleep ( 5000 ) ;  //注意时间
+        } catch (InterruptedException ignored){}
+        List<String> strings0 = readFile(folderPath+"/judge.txt");
+        double rate0 = Double.parseDouble(strings0.get(0).substring(strings0.get(0).indexOf(":") + 1));
+        double length0 = Double.parseDouble(strings0.get(1).substring(strings0.get(1).indexOf(":") + 1));
+        process1.destroy();process2.destroy();
+        return rate0 < 0.9;
+    }
+    public static void WriteResult(){
+        List<String> list = new ArrayList<>();
+        for (int i = 0; i < ModuleNum; i++) {
+            StringBuilder str = new StringBuilder("Module:");
+            str = new StringBuilder(str.toString().concat(allBest[i].getName()));
+            list.add(str.toString());
+            str = new StringBuilder("Orient:");
+            str = new StringBuilder(str.toString().concat(allBest[i].Orient));
+            list.add(str.toString());
+            str = new StringBuilder("Offset:");
+            str = new StringBuilder(str.toString().concat("("+ String.format("%.1f",(allBest[i].getMaxX() + allBest[i].getMinX())/2)+","+String.format("%.1f",(allBest[i].getMaxY() + allBest[i].getMinY())/2))+")");
+            list.add(str.toString());
+        }
+        try {
+            File file = new File("/home/eda210506/result_6.txt");
+            //文件不存在时候，主动创建文件。
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file, false);  //上述代码是清空文件重写，要想追加写入，则将FileWriter构造函数中第二个参数变为true。
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (String s : list) {
+                bw.write(s + "\n");
+            }
+//            bw.write(content);
+            bw.close();
+            fw.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void Automation(int begin, int last) {
@@ -178,7 +221,7 @@ public class ParticleTest {
         double epsilon = 0;
 //        double maxLength=Math.max(Math.abs(AreaBoundary[2].x-AreaBoundary[0].x), Math.abs(AreaBoundary[2].y-AreaBoundary[0].y));
 //        double StepLength=50;
-        System.out.println("testing! Please waiting few minutes");
+
         while (maxN-- != 0) {
             for (int i = 0; i < ModuleNum; i++) p[i].Move2(400, 400);
             for (int j = 0; j < 500; j++) {
@@ -239,8 +282,10 @@ public class ParticleTest {
                                     else if (tempStep == 2) tempParticle.Move(-StepLength, -StepLength);
                                     else tempParticle.Move(StepLength, -StepLength);
                                 }
-                            } else if (tempStep >= 5) {
-                                tempParticle.adjustAngle(tempStep - 4);
+                            } else {
+                                if (tempStep>=5)
+                                    tempParticle.adjustAngle(tempStep - 4);
+                                else tempParticle.adjustAngle(0);
                             }
 
                             judgeOutOfBounds(tempParticle);
@@ -278,8 +323,10 @@ public class ParticleTest {
                                 else if (bestStep == 2) p[i].Move(-bestStepLength, -bestStepLength);
                                 else p[i].Move(bestStepLength, -bestStepLength);
                             }
-                        } else if (bestStep >= 5) {
-                            p[i].adjustAngle(bestStep - 4);
+                        } else {
+                            if (bestStep >= 5)
+                                p[i].adjustAngle(bestStep - 4);
+                            else p[i].adjustAngle(0);
                         }
                         judgeOutOfBounds(p[i]);
                     }
@@ -407,7 +454,7 @@ public class ParticleTest {
             for (int k = 0; k < ModuleNum; k++)
                 for (int j = 0; j < ModuleNum; j++) {
                     if (j != k) {
-                        tempOverlap += (calOverlap(p[k], p[j]));
+                        tempOverlap += (calOverlap2(p[k], p[j]));
                     }
                 }
             if(tempOverlap!=0) {
@@ -420,6 +467,13 @@ public class ParticleTest {
                 System.arraycopy(p, 0, allBest, 0, ModuleNum);
             }
         }
+    }
+
+    public static double calOverlap2(Particle p1, Particle p2) {
+        MyPoint[] myPoint1 = new MyPoint[p1.getPointNum()], myPoint2 = new MyPoint[p2.getPointNum()];
+        for (int i = 0; i < p1.getPointNum(); i++) myPoint1[i] = new MyPoint(p1.getX(i), p1.getY(i));
+        for (int i = 0; i < p2.getPointNum(); i++) myPoint2[i] = new MyPoint(p2.getX(i), p2.getY(i));
+        return Math.abs(SPIA(myPoint1, myPoint2, p1.getPointNum(), p2.getPointNum()));
     }
 
     public static void judgeOutOfBounds(Particle par) {
@@ -696,7 +750,7 @@ public class ParticleTest {
 //            bw.write(content);
             bw.close();
             fw.close();
-            System.out.println("test done!");
+
         } catch (Exception e) {
             // TODO: handle exception
         }
