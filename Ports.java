@@ -100,15 +100,15 @@ public class Ports implements Serializable {
             case "MXR90":
                 for (int i = 0; i < portPointNum; i++) {
                     double x1 = this.x[i], y1 = this.y[i];
-                    this.yuanX[i] = x0 + y0 - y1;
-                    this.yuanY[i] = x0 + y0 - x1;
+                    this.yuanX[i] = y1 + x0 - y0;
+                    this.yuanY[i] = x1 + y0 - x0;
                 }
                 break;
             case "MYR90":
                 for (int i = 0; i < portPointNum; i++) {
                     double x1 = this.x[i], y1 = this.y[i];
-                    this.yuanX[i] = y1 + x0 - y0;
-                    this.yuanY[i] = x1 + y0 - x0;
+                    this.yuanX[i] = x0+y0-y1;
+                    this.yuanY[i] = y0+x0-x1;
                 }
                 break;
         }
@@ -170,8 +170,8 @@ public class Ports implements Serializable {
         } else if (angleFlag == 6) {
             for (int i = 0; i < portPointNum; i++) {
                 double x1 = this.yuanX[i], y1 = this.yuanY[i];
-                this.x[i] = y0 - y1 + x0;
-                this.y[i] = x0 - x1 + y0;
+                this.x[i] = x0+y1-y0;
+                this.y[i] = y0+x1-x0;
                 centreX += this.x[i];
                 centreY += this.y[i];
             }
@@ -179,8 +179,8 @@ public class Ports implements Serializable {
         } else if (angleFlag == 7) {
             for (int i = 0; i < portPointNum; i++) {
                 double x1 = this.yuanX[i], y1 = this.yuanY[i];
-                this.x[i] = y1 - y0 + x0;
-                this.y[i] = x1 - x0 + y0;
+                this.x[i] = x0+y0-y1;
+                this.y[i] = y0+x0-x1;
                 centreX += this.x[i];
                 centreY += this.y[i];
             }
