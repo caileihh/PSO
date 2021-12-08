@@ -20,10 +20,10 @@ public class ParticleTest {
     public static Particle[] allBest;   //全局最优
     public static double bestF = 0, bestOverlap = 0, eps = 1e-6; //最佳总值,总overlap
     public static double allSumUp = 0, bestSumOverlap = 0;//总距离，总最佳overlap
-    public static double shellWidth = 7.5,AreaMaxX=-10000,AreaMinX=10000,AreaMaxY=-10000,AreaMinY=10000;
+    public static double shellWidth = 10,AreaMaxX=-10000,AreaMinX=10000,AreaMaxY=-10000,AreaMinY=10000;
     public static Random random = new Random();
     //    public static double rand=random.nextDouble()*10;
-    public static double c1 = 3, c2 = 1.2, disRate = 0.001, overlapRate = 10000,maxScore=0;
+    public static double c1 = 3, c2 = 1.2, disRate = 0.001, overlapRate = 10000,maxScore=-1;
     public static ArrayList<ArrayList<Ports>> LinkSET = new ArrayList<>();
 
     public static MyPoint[] p1 = new MyPoint[6], p2 = new MyPoint[4];
@@ -41,12 +41,11 @@ public class ParticleTest {
             judgeScore();
         }while (maxScore<0.90 &&(((double)(System.currentTimeMillis()- startTime)) / 1000 )< 240);
         OutPutResultTxtFile(Transition2(args[0]), args[2]);
-        judgeScore();
         System.out.println(maxScore);
+        judgeScore();
         WriteResult();
         System.out.println("test done!");
-
-//        TestMyself();
+//        writeRoutingRes();
 
         long endTime = System.currentTimeMillis();
         double time = ((double) (endTime - startTime)) / 1000;
@@ -54,29 +53,94 @@ public class ParticleTest {
 //        Draw();
     }
 
-    public static boolean judgeScore() throws IOException, InterruptedException {
+    public static void writeRoutingRes(){
+        List<String> list=readFile("/home/eda210506/result.txt");
+        List<String> RoutingRes=new ArrayList<>();
+        for(int i=0;i<list.size();i++){
+            String Line=list.get(i);
+            String name;
+            if(Line.matches("LINK(.*)")) {
+                Line = Line.replace("-", "_").replace("LINK","Link");
+                name=Line;
+                RoutingRes.add(Line);
+                Line=list.get(++i);
+                if(Line.matches("line(.*)")){
+                    Line=Line.replace("line","path").replace(": ",":");
+                    RoutingRes.add(Line);
+                }
+                else if(Line.matches("thread(.*)")){
+                    Line=Line.replace("thread","path").replace(": ",":");
+                    RoutingRes.add(Line);
+                }
+                else RoutingRes.add(Line);
+                Line=list.get(++i);
+                if(Line.matches("line(.*)")){
+                    Line=Line.replace("line","path").replace(": ",":");
+                    RoutingRes.add(Line);
+                }
+                else if(Line.matches("thread(.*)")){
+                    Line=Line.replace("thread","path").replace(": ",":");
+                    RoutingRes.add(Line);
+                }
+                else RoutingRes.add(Line);
+                while (i<list.size()-1&&!list.get(i+1).matches("LINK(.*)")){
+                    RoutingRes.add(name);
+                    RoutingRes.add(list.get(++i));
+                    Line=list.get(++i);
+                    if(Line.matches("line(.*)")){
+                        Line=Line.replace("line","path").replace(": ",":");
+                        RoutingRes.add(Line);
+                    }
+                    else if(Line.matches("thread(.*)")){
+                        Line=Line.replace("thread","path").replace(": ",":");
+                        RoutingRes.add(Line);
+                    }
+                    else RoutingRes.add(Line);
+                }
+            }
+        }
+        try {
+            File file = new File("/home/eda210506/RoutingRes.txt");
+            //文件不存在时候，主动创建文件。
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file, false);  //上述代码是清空文件重写，要想追加写入，则将FileWriter构造函数中第二个参数变为true。
+            BufferedWriter bw = new BufferedWriter(fw);
+            for (String s : RoutingRes) {
+                bw.write(s + "\n");
+            }
+            bw.close();
+            fw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean judgeScore() throws IOException, InterruptedException, CloneNotSupportedException {
         String folderPath="/home/eda210506";
         String command1 = "./conversion.exe " + folderPath + " " + folderPath +
                 "/ModuleResult.txt" + " " + folderPath +
                 "/connect_1.txt";
         String command2="./LineSearch.exe " + folderPath + " " + folderPath;
-        Process process1 = Runtime.getRuntime().exec(command1);
-        process1.waitFor();
 
         try { Thread.sleep ( 20 ) ;  //注意时间
+            Process process1 = Runtime.getRuntime().exec(command1);
+            process1.waitFor();
+            process1.destroy();
         } catch (InterruptedException ignored){}
-        process1.destroy();
-        Process process2 = Runtime.getRuntime().exec(command2);
-        process2.waitFor();
+
         try { Thread.sleep ( 50 ) ;  //注意时间
+            Process process2 = Runtime.getRuntime().exec(command2);
+            process2.waitFor();
+            process2.destroy();
         } catch (InterruptedException ignored){}
-        process2.destroy();
         List<String> strings0 = readFile(folderPath+"/judge.txt");
         double rate0 = Double.parseDouble(strings0.get(0).substring(strings0.get(0).indexOf(":") + 1));
         double length0 = Double.parseDouble(strings0.get(1).substring(strings0.get(1).indexOf(":") + 1));
         if(rate0>maxScore) {
             maxScore = rate0;
-            allBest=p.clone();
+            for(int i=0;i<ModuleNum;i++) allBest[i]=p[i].clone();
         }
         return rate0 < 0.9;
     }

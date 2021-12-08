@@ -20,6 +20,7 @@ public class Particle implements Cloneable, Serializable {
     public Particle clone() throws CloneNotSupportedException {
         Particle p = new Particle();
         p.name = this.name; p.ruleName=this.ruleName;
+        p.Orient=this.Orient;
         p.pointNum = this.pointNum;
         p.x = this.x.clone(); p.yuanX=this.x.clone();
         p.y = this.y.clone(); p.yuanY=this.y.clone();
