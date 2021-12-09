@@ -12,7 +12,7 @@ import javax.swing.*;
 
 public class ParticleTest {
     public static MyPoint[] AreaBoundary;  //顺时针为正方向
-    public static int ModuleNum = 50;
+    public static int ModuleNum = 50,id=0;
     public static String fileNumber = "16-11004";        //总：0~20、100~120   5      13  18  20  101 102 持平：19 105  109
     public static Particle[] p  ;
     public static MyPoint[] v ;
@@ -30,6 +30,15 @@ public class ParticleTest {
 
     public static void main(String[] args) throws CloneNotSupportedException, IOException, NullPointerException, InterruptedException {
 
+        StringBuilder tempArg2=new StringBuilder(args[2]);
+        StringBuilder tempArg3=new StringBuilder(args[3]);
+        id=Integer.parseInt(args[0].substring(args[0].lastIndexOf("_")+1,args[0].indexOf(".")));
+        String arg2=tempArg2.insert(tempArg2.lastIndexOf("_")+1,id).toString();
+        String arg3=tempArg3.insert(tempArg3.lastIndexOf("_")+1,id).toString();
+
+        String inputPath=args[1].substring(0,args[1].indexOf("/Ports"));
+        String resultPath=arg2.substring(0,arg2.indexOf("/result_"));
+
         long startTime = System.currentTimeMillis();
         ReadAndInit(args[0]);
         ReadConnectFile(args[1]);
@@ -37,20 +46,39 @@ public class ParticleTest {
         System.out.println("testing! Please waiting few minutes");
         do {
             qLearning(1);
-            OutPutResultTxtFile(Transition(args[0]), args[2]);
-            judgeScore();
-        }while (maxScore<0.90 &&(((double)(System.currentTimeMillis()- startTime)) / 1000 )< 240);
-        OutPutResultTxtFile(Transition2(args[0]), args[2]);
+            OutPutResultTxtFile(Transition(args[0]), arg3);
+            judgeScore(inputPath,resultPath);
+        }while (maxScore<1 &&(((double)(System.currentTimeMillis()- startTime)) / 1000 )< 240);
+        OutPutResultTxtFile(Transition2(args[0]), arg3);
         System.out.println(maxScore);
-        judgeScore();
-        WriteResult();
+        String routeRes=judgeScore(inputPath,resultPath);
+        WriteResult(arg2);
+        copyFile(routeRes+"/result.txt","/home/eda210506/project/route_results/routeres_"+id+".txt");
         System.out.println("test done!");
 //        writeRoutingRes();
 
         long endTime = System.currentTimeMillis();
         double time = ((double) (endTime - startTime)) / 1000;
         System.out.println("花费时间" + (time) + "s");
-//        Draw();
+    }
+
+    public static void copyFile(String oldPath, String newPath) throws IOException {
+        File oldFile = new File(oldPath);
+        File file = new File(newPath);
+        if (!oldFile.exists()) {
+            file.createNewFile();
+        }
+        FileInputStream in = new FileInputStream(oldFile);
+        FileOutputStream out = new FileOutputStream(file);
+
+        byte[] buffer=new byte[2097152];
+        int readByte = 0;
+        while((readByte = in.read(buffer)) != -1){
+            out.write(buffer, 0, readByte);
+        }
+
+        in.close();
+        out.close();
     }
 
     public static void writeRoutingRes(){
@@ -117,11 +145,11 @@ public class ParticleTest {
         }
     }
 
-    public static boolean judgeScore() throws IOException, InterruptedException, CloneNotSupportedException {
-        String folderPath="/home/eda210506";
-        String command1 = "./conversion.exe " + folderPath + " " + folderPath +
-                "/ModuleResult.txt" + " " + folderPath +
-                "/connect_1.txt";
+    public static String judgeScore(String inputPath,String resultPath) throws IOException, InterruptedException, CloneNotSupportedException {
+        String folderPath="/home/eda210506/tempList/"+id;
+        String command1 = "./conversion.exe " + folderPath + " " + resultPath +
+                "/ModuleResult_"+id+".txt" + " " + inputPath +
+                "/Ports_link_input_"+id+".txt";
         String command2="./LineSearch.exe " + folderPath + " " + folderPath;
 
         try { Thread.sleep ( 20 ) ;  //注意时间
@@ -142,9 +170,9 @@ public class ParticleTest {
             maxScore = rate0;
             for(int i=0;i<ModuleNum;i++) allBest[i]=p[i].clone();
         }
-        return rate0 < 0.9;
+        return folderPath;
     }
-    public static void WriteResult(){
+    public static void WriteResult(String resultPath){
         List<String> list = new ArrayList<>();
         for (int i = 0; i < ModuleNum; i++) {
             StringBuilder str = new StringBuilder("Module:");
@@ -154,11 +182,11 @@ public class ParticleTest {
             str = new StringBuilder(str.toString().concat(allBest[i].Orient));
             list.add(str.toString());
             str = new StringBuilder("Offset:");
-            str = new StringBuilder(str.toString().concat("("+ String.format("%.1f",(allBest[i].getMaxX() + allBest[i].getMinX())/2)+","+String.format("%.1f",(allBest[i].getMaxY() + allBest[i].getMinY())/2))+")");
+            str = new StringBuilder(str.toString().concat("("+ String.format("%.2f",allBest[i].centerPoint.x)+","+String.format("%.2f",allBest[i].centerPoint.y))+")");
             list.add(str.toString());
         }
         try {
-            File file = new File("/home/eda210506/result_6.txt");
+            File file = new File(resultPath);
             //文件不存在时候，主动创建文件。
             if (!file.exists()) {
                 file.createNewFile();

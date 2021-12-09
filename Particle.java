@@ -263,15 +263,19 @@ public class Particle implements Cloneable, Serializable {
             case "MXR90":
                 for (int i = 0; i < pointNum; i++) {
                     double x1 = this.x[i], y1 = this.y[i];
-                    this.yuanX[i] = y1 + x0 - y0;
-                    this.yuanY[i] = x1 + y0 - x0;
+//                    this.yuanX[i] = y1 + x0 - y0;
+//                    this.yuanY[i] = x1 + y0 - x0;
+                    this.yuanX[i] = x0+y0-y1;
+                    this.yuanY[i] = y0+x0-x1;
                 }
                 break;
             case "MYR90":
                 for (int i = 0; i < pointNum; i++) {
                     double x1 = this.x[i], y1 = this.y[i];
-                    this.yuanX[i] = x0+y0-y1;
-                    this.yuanY[i] = y0+x0-x1;
+                    this.yuanX[i] = y1 + x0 - y0;
+                    this.yuanY[i] = x1 + y0 - x0;
+//                    this.yuanX[i] = x0+y0-y1;
+//                    this.yuanY[i] = y0+x0-x1;
                 }
                 break;
         }
@@ -341,10 +345,14 @@ public class Particle implements Cloneable, Serializable {
         } else if (angleFlag == 6) {
             for (int i = 0; i < pointNum; i++) {
                 double x1 = this.yuanX[i], y1 = this.yuanY[i];
-                this.x[i] = x0+y1-y0;
-                this.shellX[i] = x0+y1-y0;
-                this.y[i] = y0+x1-x0;
-                this.shellY[i] = y0+x1-x0;
+//                this.x[i] = x0+y1-y0;
+//                this.shellX[i] = x0+y1-y0;
+//                this.y[i] = y0+x1-x0;
+//                this.shellY[i] = y0+x1-x0;
+                this.x[i] = x0+y0-y1;
+                this.shellX[i] = x0+y0-y1;
+                this.y[i] = y0+x0-x1;
+                this.shellY[i] = y0+x0-x1;
 
             }
             this.Orient="MXR90";
@@ -352,10 +360,15 @@ public class Particle implements Cloneable, Serializable {
         } else if (angleFlag == 7) {
             for (int i = 0; i < pointNum; i++) {
                 double x1 = this.yuanX[i], y1 = this.yuanY[i];
-                this.x[i] = x0+y0-y1;
-                this.shellX[i] = x0+y0-y1;
-                this.y[i] = y0+x0-x1;
-                this.shellY[i] = y0+x0-x1;
+//                this.x[i] = x0+y0-y1;
+//                this.shellX[i] = x0+y0-y1;
+//                this.y[i] = y0+x0-x1;
+//                this.shellY[i] = y0+x0-x1;
+
+                this.x[i] = x0+y1-y0;
+                this.shellX[i] = x0+y1-y0;
+                this.y[i] = y0+x1-x0;
+                this.shellY[i] = y0+x1-x0;
 
             }
             this.Orient="MYR90";
