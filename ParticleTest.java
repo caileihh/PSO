@@ -30,36 +30,84 @@ public class ParticleTest {
 
     public static void main(String[] args) throws CloneNotSupportedException, IOException, NullPointerException, InterruptedException {
 
-        StringBuilder tempArg2=new StringBuilder(args[2]);
-        StringBuilder tempArg3=new StringBuilder(args[3]);
-        id=Integer.parseInt(args[0].substring(args[0].lastIndexOf("_")+1,args[0].indexOf(".")));
-        String arg2=tempArg2.insert(tempArg2.lastIndexOf("_")+1,id).toString();
-        String arg3=tempArg3.insert(tempArg3.lastIndexOf("_")+1,id).toString();
+//        StringBuilder tempArg2=new StringBuilder(args[2]);
+//        StringBuilder tempArg3=new StringBuilder(args[3]);
+//        id=Integer.parseInt(args[0].substring(args[0].lastIndexOf("_")+1,args[0].indexOf(".")));
+//        String arg2=tempArg2.insert(tempArg2.lastIndexOf("_")+1,id).toString();
+//        String arg3=tempArg3.insert(tempArg3.lastIndexOf("_")+1,id).toString();
+//
+//        String inputPath=args[1].substring(0,args[1].indexOf("/Ports"));
+//        String resultPath=arg2.substring(0,arg2.indexOf("/result_"));
+//
+//        long startTime = System.currentTimeMillis();
+//        ReadAndInit(args[0]);
+//        ReadConnectFile(args[1]);
+//        Init();
+//        System.out.println("testing! Please waiting few minutes");
+//        do {
+//            qLearning(1);
+//            OutPutResultTxtFile(Transition(args[0]), arg3);
+//            judgeScore(inputPath,resultPath);
+//        }while (maxScore<1 &&(((double)(System.currentTimeMillis()- startTime)) / 1000 )< 240);
+//        OutPutResultTxtFile(Transition2(args[0]), arg3);
+//        System.out.println(maxScore);
+//        String routeRes=judgeScore(inputPath,resultPath);
+//        WriteResult(arg2);
+//        copyFile(routeRes+"/result.txt","/home/eda210506/project/route_results/routeres_"+id+".txt");
+//        System.out.println("test done!");
+//
+//        long endTime = System.currentTimeMillis();
+//        double time = ((double) (endTime - startTime)) / 1000;
+//        System.out.println("花费时间" + (time) + "s");
 
-        String inputPath=args[1].substring(0,args[1].indexOf("/Ports"));
-        String resultPath=arg2.substring(0,arg2.indexOf("/result_"));
 
-        long startTime = System.currentTimeMillis();
-        ReadAndInit(args[0]);
-        ReadConnectFile(args[1]);
+        RunRoute(args[0],args[1],args[2],args[3]);
+    }
+
+    public static void RunRoute(String arg0,String arg1,String arg2,String arg3) throws CloneNotSupportedException, IOException {
+        String folderPath="/home/eda210506/project/code";
+        ReadAndInit(arg0);
+        ReadConnectFile(arg1);
         Init();
-        System.out.println("testing! Please waiting few minutes");
-        do {
-            qLearning(1);
-            OutPutResultTxtFile(Transition(args[0]), arg3);
-            judgeScore(inputPath,resultPath);
-        }while (maxScore<1 &&(((double)(System.currentTimeMillis()- startTime)) / 1000 )< 240);
-        OutPutResultTxtFile(Transition2(args[0]), arg3);
-        System.out.println(maxScore);
-        String routeRes=judgeScore(inputPath,resultPath);
-        WriteResult(arg2);
-        copyFile(routeRes+"/result.txt","/home/eda210506/project/route_results/routeres_"+id+".txt");
-        System.out.println("test done!");
-//        writeRoutingRes();
+        TransOrient(arg2);
+        OutPutResultTxtFile(Transition2(arg0), "/home/eda210506/project/code/ModuleResult_"+id+".txt");
+        String command1 = "./conversion.exe " + folderPath + " " + folderPath +
+                "/ModuleResult_"+id+".txt" + " " + arg1;
+        String command2="./LineSearch.exe " + folderPath + " " + folderPath;
 
-        long endTime = System.currentTimeMillis();
-        double time = ((double) (endTime - startTime)) / 1000;
-        System.out.println("花费时间" + (time) + "s");
+        try { Thread.sleep ( 20 ) ;  //注意时间
+            Process process1 = Runtime.getRuntime().exec(command1);
+            process1.waitFor();
+            process1.destroy();
+        } catch (InterruptedException | IOException ignored){}
+
+        try { Thread.sleep ( 50 ) ;  //注意时间
+            Process process2 = Runtime.getRuntime().exec(command2);
+            process2.waitFor();
+            process2.destroy();
+        } catch (InterruptedException | IOException ignored){}
+        copyFile(folderPath+"/result.txt","/home/eda210506/project/route_results/"+arg3);
+    }
+
+    public static void TransOrient(String resultFile){
+        List<String> list = readFile(resultFile);
+        String []orientList={"R0","R90","R180","R270","MX","MY","MXR90","MYR90"};
+        List<String> oriList=Arrays.asList(orientList);
+        for(int i=0;i<list.size();i++){
+            String Line=list.get(i);
+            int num=0;
+            if(Line.matches("Module:(.*)")) {
+                num = Integer.parseInt(Line.substring(Line.lastIndexOf("M") + 1)) - 1;
+                Line=list.get(++i);
+                String orient=Line.substring(Line.indexOf(":")+1);
+                int angle=oriList.indexOf(orient);
+                Line=list.get(++i);
+                double x=Double.parseDouble(Line.substring(Line.indexOf("(")+1,Line.indexOf(",")));
+                double y=Double.parseDouble(Line.substring(Line.indexOf(",")+1,Line.indexOf(")")));
+                allBest[num].Move2(x,y);
+                allBest[num].adjustAngle(angle);
+            }
+        }
     }
 
     public static void copyFile(String oldPath, String newPath) throws IOException {
@@ -1103,4 +1151,3 @@ public class ParticleTest {
     }
 
 }
-
