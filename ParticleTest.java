@@ -29,41 +29,42 @@ public class ParticleTest {
 
     public static void main(String[] args) throws CloneNotSupportedException, IOException, NullPointerException, InterruptedException {
 
-//        StringBuilder tempArg2=new StringBuilder(args[2]);
-//        id=Integer.parseInt(args[0].substring(args[0].lastIndexOf("_")+1,args[0].indexOf(".")));
-//        String arg2=tempArg2.insert(tempArg2.lastIndexOf("_")+1,id).toString();
-//        String arg3="/home/eda210506/tempList/"+id+"/ModuleResult_"+id+".txt";
-//
-////        System.out.println("Area file:"+args[0]);
-////        System.out.println("Link file:"+args[1]);
-////        System.out.println("id:"+id);
-//
-//        String inputPath=args[1].substring(0,args[1].indexOf("/Ports"));
-//        String resultPath=arg2.substring(0,arg2.indexOf("/result_"));
-//
-//        long startTime = System.currentTimeMillis();
-//        ReadAndInit(args[0]);
-//        ReadConnectFile(args[1]);
-//        Init();
-//        System.out.println("testing! Please waiting few minutes");
-//        do {
-//            qLearning(1);
-//            OutPutResultTxtFile(Transition(args[0]), arg3);
-//            judgeScore(inputPath,resultPath);
-//        }while (maxScore<1 &&(((double)(System.currentTimeMillis()- startTime)) / 1000 )< 240);
-//        OutPutResultTxtFile(Transition2(args[0]), arg3);
-//        System.out.println(maxScore);
-//        String routeRes=judgeScore(inputPath,resultPath);
-//        WriteResult(arg2);
-//        copyFile(routeRes+"/result.txt","/home/eda210506/project/route_results/routeres_"+id+".txt");
-//        System.out.println("test done!");
-//
-//        long endTime = System.currentTimeMillis();
-//        double time = ((double) (endTime - startTime)) / 1000;
-//        System.out.println("花费时间" + (time) + "s");
+        StringBuilder tempArg2=new StringBuilder(args[2]);
+        id=Integer.parseInt(args[0].substring(args[0].lastIndexOf("_")+1,args[0].indexOf(".")));
+        String arg2=tempArg2.insert(tempArg2.lastIndexOf("_")+1,id).toString();
+        String arg3="/home/eda210506/tempList/"+id+"/ModuleResult_"+id+".txt";
+        File file=new File("/home/eda210506/tempList/"+id);
+        if(!file.exists()) file.mkdirs();
+//        System.out.println("Area file:"+args[0]);
+//        System.out.println("Link file:"+args[1]);
+//        System.out.println("id:"+id);
+
+        String inputPath=args[1].substring(0,args[1].indexOf("/Ports"));
+        String resultPath=arg2.substring(0,arg2.indexOf("/result_"));
+
+        long startTime = System.currentTimeMillis();
+        ReadAndInit(args[0]);
+        ReadConnectFile(args[1]);
+        Init();
+        System.out.println("testing! Please waiting few minutes");
+        do {
+            qLearning(1);
+            OutPutResultTxtFile(Transition(args[0]), arg3);
+            judgeScore(inputPath,resultPath);
+        }while (maxScore<1 &&(((double)(System.currentTimeMillis()- startTime)) / 1000 )< 240);
+        OutPutResultTxtFile(Transition2(args[0]), arg3);
+        System.out.println(maxScore);
+        String routeRes=judgeScore(inputPath,resultPath);
+        WriteResult(arg2);
+        copyFile(routeRes+"/result.txt","/home/eda210506/project/route_results/routeres_"+id+".txt");
+        System.out.println("test done!");
+
+        long endTime = System.currentTimeMillis();
+        double time = ((double) (endTime - startTime)) / 1000;
+        System.out.println("花费时间" + (time) + "s");
 
 
-        RunRoute(args[0],args[1],args[2],args[3]);
+//        RunRoute(args[0],args[1],args[2],args[3]);
     }
 
     public static void RunRoute(String arg0,String arg1,String arg2,String arg3) throws CloneNotSupportedException, IOException {
