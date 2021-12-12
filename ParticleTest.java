@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.awt.geom.Area;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
@@ -31,10 +30,13 @@ public class ParticleTest {
     public static void main(String[] args) throws CloneNotSupportedException, IOException, NullPointerException, InterruptedException {
 
 //        StringBuilder tempArg2=new StringBuilder(args[2]);
-//        StringBuilder tempArg3=new StringBuilder(args[3]);
 //        id=Integer.parseInt(args[0].substring(args[0].lastIndexOf("_")+1,args[0].indexOf(".")));
 //        String arg2=tempArg2.insert(tempArg2.lastIndexOf("_")+1,id).toString();
-//        String arg3=tempArg3.insert(tempArg3.lastIndexOf("_")+1,id).toString();
+//        String arg3="/home/eda210506/tempList/"+id+"/ModuleResult_"+id+".txt";
+//
+////        System.out.println("Area file:"+args[0]);
+////        System.out.println("Link file:"+args[1]);
+////        System.out.println("id:"+id);
 //
 //        String inputPath=args[1].substring(0,args[1].indexOf("/Ports"));
 //        String resultPath=arg2.substring(0,arg2.indexOf("/result_"));
@@ -65,12 +67,15 @@ public class ParticleTest {
     }
 
     public static void RunRoute(String arg0,String arg1,String arg2,String arg3) throws CloneNotSupportedException, IOException {
-        String folderPath="/home/eda210506/project/code";
         ReadAndInit(arg0);
         ReadConnectFile(arg1);
         Init();
         TransOrient(arg2);
-        OutPutResultTxtFile(Transition2(arg0), "/home/eda210506/project/code/ModuleResult_"+id+".txt");
+        id=Integer.parseInt(arg3.substring(arg3.lastIndexOf("_")+1,arg3.indexOf(".")));
+        String folderPath="/home/eda210506/tempList/"+id;
+        File file=new File(folderPath);
+        if(!file.exists()) file.mkdir();
+        OutPutResultTxtFile(Transition2(arg0), folderPath+"/ModuleResult_"+id+".txt");
         String command1 = "./conversion.exe " + folderPath + " " + folderPath +
                 "/ModuleResult_"+id+".txt" + " " + arg1;
         String command2="./LineSearch.exe " + folderPath + " " + folderPath;
@@ -90,7 +95,9 @@ public class ParticleTest {
     }
 
     public static void TransOrient(String resultFile){
-        List<String> list = readFile(resultFile);
+        File file=new File(resultFile);
+        List<String> list = new ArrayList<>();
+        if(file.exists())  list= readFile(resultFile);
         String []orientList={"R0","R90","R180","R270","MX","MY","MXR90","MYR90"};
         List<String> oriList=Arrays.asList(orientList);
         for(int i=0;i<list.size();i++){
@@ -195,7 +202,7 @@ public class ParticleTest {
 
     public static String judgeScore(String inputPath,String resultPath) throws IOException, InterruptedException, CloneNotSupportedException {
         String folderPath="/home/eda210506/tempList/"+id;
-        String command1 = "./conversion.exe " + folderPath + " " + resultPath +
+        String command1 = "./conversion.exe " + folderPath + " " + folderPath +
                 "/ModuleResult_"+id+".txt" + " " + inputPath +
                 "/Ports_link_input_"+id+".txt";
         String command2="./LineSearch.exe " + folderPath + " " + folderPath;
@@ -220,6 +227,10 @@ public class ParticleTest {
         }
         return folderPath;
     }
+
+    public static double ReserveFloat1(double x){
+        return Double.parseDouble(String.format("%.1f",x));
+    }
     public static void WriteResult(String resultPath){
         List<String> list = new ArrayList<>();
         for (int i = 0; i < ModuleNum; i++) {
@@ -230,7 +241,8 @@ public class ParticleTest {
             str = new StringBuilder(str.toString().concat(allBest[i].Orient));
             list.add(str.toString());
             str = new StringBuilder("Offset:");
-            str = new StringBuilder(str.toString().concat("("+ String.format("%.2f",allBest[i].centerPoint.x)+","+String.format("%.2f",allBest[i].centerPoint.y))+")");
+            str = new StringBuilder(str.toString().concat("("+ String.format("%.2f",(ReserveFloat1(allBest[i].getMaxX())+ReserveFloat1(allBest[i].getMinX()))/2)+","
+                    +String.format("%.2f",(ReserveFloat1(allBest[i].getMaxY())+ReserveFloat1(allBest[i].getMinY()))/2))+")");
             list.add(str.toString());
         }
         try {
